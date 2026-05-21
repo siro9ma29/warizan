@@ -670,6 +670,156 @@
     .main-body { grid-template-columns: 1fr; }
     .level-grid { grid-template-columns: repeat(2, 1fr); }
   }
+
+  /* ============ スマホ縦長対応 ============ */
+  @media (max-width: 599px) {
+
+    /* タイトル画面 */
+    #titleScreen {
+      padding: 2vh 4vw;
+      gap: 2vh;
+      overflow-y: auto;
+    }
+    .app-title { font-size: clamp(1.5rem, 7vw, 2.2rem); }
+    .app-title::before, .app-title::after { display: none; }
+    .app-subtitle { font-size: 0.85rem; }
+    .level-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 2vw; width: 96vw;
+    }
+    .level-card { min-height: 14vh; padding: 1.5vh 1vw; }
+    .level-card .lv-num { font-size: clamp(1.4rem, 6vw, 2rem); }
+    .level-card .lv-desc { font-size: 0.7rem; }
+    .mode-row { gap: 3vw; }
+    .mode-btn { padding: 1.4vh 4vw; font-size: 0.9rem; }
+    .start-btn { font-size: 1.1rem; padding: 1.6vh 8vw; }
+
+    /* メイン画面: 縦積みに変更 */
+    #mainScreen {
+      padding: 1vh 2vw;
+      gap: 1vh;
+    }
+
+    /* トップバーをコンパクトに */
+    .top-bar { padding: 0 0.5vw; }
+    .pill { padding: 0.5vh 2.5vw; font-size: 0.78rem; }
+    .icon-btn {
+      width: 36px; height: 36px;
+      font-size: 1rem;
+    }
+
+    /* メインボディ: ひっ算(上) → コントロール(下) の縦積み */
+    .main-body {
+      display: flex;
+      flex-direction: column;
+      gap: 1vh;
+    }
+
+    /* ひっ算エリアは上部に固定高さ */
+    .calc-panel {
+      flex: 0 0 38vh;
+      min-height: 38vh;
+      border-radius: 3vw;
+    }
+
+    /* コントロールエリア */
+    .controls {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1vh;
+      min-height: 0;
+    }
+
+    /* 手順ボタンパネル */
+    .step-panel {
+      border-radius: 3vw;
+      padding: 1.2vh 2.5vw;
+    }
+    .panel-header { margin-bottom: 0.8vh; }
+    .panel-title { font-size: 0.82rem; }
+    .step-hint { font-size: 0.7rem; }
+    .step-grid { gap: 1.5vw; }
+    .step-btn {
+      aspect-ratio: 1 / 0.9;
+      border-radius: 2.5vw;
+      border-width: 2px;
+      box-shadow: 0 3px 0 var(--line);
+      gap: 0.2vh;
+    }
+    .step-btn .step-icon { font-size: 1.4rem; }
+    .step-btn .step-label { font-size: 0.85rem; letter-spacing: 0; }
+
+    /* テンキーパネル */
+    .numpad-panel {
+      flex: 1;
+      border-radius: 3vw;
+      padding: 1.2vh 2.5vw;
+      min-height: 0;
+    }
+    .numpad-grid { gap: 1.5vw; }
+    .num-btn {
+      border-radius: 2.5vw;
+      border-width: 2px;
+      box-shadow: 0 3px 0 var(--line);
+      font-size: clamp(1.4rem, 6vw, 2rem);
+    }
+
+    /* 次の問題へボタン */
+    .next-q-btn {
+      font-size: 1rem;
+      padding: 1.4vh 6vw;
+      bottom: 2vh;
+    }
+
+    /* リザルト画面 */
+    #resultScreen { padding: 3vh 4vw; gap: 2vh; }
+    .result-card { padding: 4vh 6vw; border-radius: 4vw; }
+    .result-emoji { font-size: 4rem; }
+    .result-title { font-size: 1.6rem; }
+    .result-score { font-size: 2.4rem; }
+    .result-msg { font-size: 0.9rem; }
+    .result-buttons { gap: 3vw; }
+    .result-btn { font-size: 0.9rem; padding: 1.2vh 4vw; }
+
+    /* モーダル（九九表）: スクロール可能に */
+    .modal { padding: 2vh 3vw; border-radius: 4vw; overflow-y: auto; max-height: 85vh; }
+    .kuku-cell { padding: 0.5vh 0.3vw; font-size: 0.75rem; }
+
+    /* 赤丸のサイズ調整 */
+    .big-maru .maru-svg-wrap { width: 38vh; height: 38vh; }
+    .big-maru .seikai-text { font-size: 1.2rem; }
+  }
+
+  /* ============ スマホ横向き対応 ============ */
+  @media (max-height: 480px) and (orientation: landscape) {
+    #mainScreen { padding: 0.5vh 1.5vw; gap: 0.5vh; }
+    .top-bar .pill { padding: 0.3vh 1.5vw; font-size: 0.72rem; }
+    .icon-btn { width: 30px; height: 30px; font-size: 0.85rem; }
+
+    .main-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5vw;
+    }
+    .calc-panel { flex: unset; min-height: unset; }
+    .controls { gap: 0.8vh; }
+
+    .step-panel { padding: 0.8vh 1.5vw; }
+    .panel-header { margin-bottom: 0.4vh; }
+    .panel-title { font-size: 0.75rem; }
+    .step-hint { display: none; }  /* 横向き狭い時は省略 */
+    .step-btn {
+      aspect-ratio: 1 / 0.7;
+      gap: 0;
+    }
+    .step-btn .step-icon { font-size: 1rem; }
+    .step-btn .step-label { font-size: 0.72rem; }
+
+    .numpad-panel { padding: 0.8vh 1.5vw; }
+    .num-btn { font-size: clamp(1.2rem, 4.5vw, 1.6rem); }
+    .numpad-grid { gap: 0.6vw; }
+  }
 </style>
 </head>
 <body>
@@ -740,7 +890,7 @@
           <div class="panel-title">てじゅんを えらぼう</div>
           <div class="step-hint" id="stepHint">つぎは…?</div>
         </div>
-        <div class="step-grid">
+        <div class="step-grid" id="stepGrid">
           <button class="step-btn tateru" data-step="tateru">
             <span class="step-icon">⬆️</span><span class="step-label">たてる</span>
           </button>
@@ -1012,13 +1162,12 @@ function buildPlan(dividend, divisor) {
 
 function getCellSize() {
   const panel = document.getElementById('calcPanel');
-  const w = panel.clientWidth || window.innerWidth * 0.45;
-  const h = panel.clientHeight || window.innerHeight * 0.7;
-  // 数字を表示するのに十分な大きさを確保
-  const candA = Math.floor(h / 8);
-  const candB = Math.floor(w / 7);
-  const size = Math.max(40, Math.min(candA, candB, 90));
-  return size;
+  const w = panel.clientWidth  || window.innerWidth  * 0.45;
+  const h = panel.clientHeight || window.innerHeight * 0.4;
+  // 問題の最大行数(3桁問題=8行)と列数(4列)を基準に、マスが収まる最大サイズを算出
+  const candH = Math.floor(h / 8.5);   // 縦: 余白込みで8.5行分
+  const candW = Math.floor(w / 5.5);   // 横: 余白込みで5.5列分 (div+わる数)
+  return Math.max(32, Math.min(candH, candW, 90));
 }
 
 /* ---------- DOMスナップショット & 復元 ----------
@@ -1294,7 +1443,14 @@ function updateStepHint() {
     return;
   }
 
-  stepHint.textContent = `つぎは「${STEP_NAMES_JA[step.kind]}」だよ`;
+  // ランダムモードでは「ヒント」を出さない（次に押すべき手順を教えない）
+  const isRandom = (state.mode === 'random');
+
+  if (isRandom) {
+    stepHint.textContent = 'つぎの てじゅんは…?';
+  } else {
+    stepHint.textContent = `つぎは「${STEP_NAMES_JA[step.kind]}」だよ`;
+  }
 
   if (c.stepConfirmed) {
     const stage = c.plan.stageData[step.position];
@@ -1308,8 +1464,12 @@ function updateStepHint() {
     else if (step.kind === 'orosu') numHint.textContent = `${step.value} を おろそう`;
   } else {
     numHint.textContent = 'てじゅんを えらんでね';
-    const btn = document.querySelector(`.step-btn[data-step="${step.kind}"]`);
-    if (btn) btn.classList.add('next');
+    // 固定モードでのみ、次に押すべきボタンに 'next' クラスを付けて
+    // 青枠＋揺れアニメで視覚的にヒントを出す
+    if (!isRandom) {
+      const btn = document.querySelector(`.step-btn[data-step="${step.kind}"]`);
+      if (btn) btn.classList.add('next');
+    }
   }
 }
 
@@ -1556,10 +1716,35 @@ function loadQuestion() {
   };
   document.getElementById('qNumDisplay').textContent = state.qIdx + 1;
   document.getElementById('qTotalDisplay').textContent = state.questions.length;
+  // ランダムモードでは、毎問「たてる/かける/ひく/おろす」の表示順をシャッフル
+  shuffleStepButtons(state.mode === 'random');
   renderDivision();
   updateStepHint();
   enableNumpad(false);
   clearSpotlight();
+}
+
+/* ---------- STEP BUTTONS SHUFFLE ----------
+   ランダムモードでは毎問ボタンの並び順をシャッフルする
+   (DOMの順番は変えず CSS の order プロパティで表示順だけ変更) */
+function shuffleStepButtons(shouldShuffle) {
+  const grid = document.getElementById('stepGrid');
+  if (!grid) return;
+  const buttons = grid.querySelectorAll('.step-btn');
+  if (!shouldShuffle) {
+    // 固定モード: 元の並び順 (たてる→かける→ひく→おろす)
+    buttons.forEach(b => { b.style.order = ''; });
+    return;
+  }
+  // Fisher-Yates シャッフルで 0..3 の順序を生成
+  const order = [0, 1, 2, 3];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  buttons.forEach((btn, idx) => {
+    btn.style.order = order[idx];
+  });
 }
 
 /* ---------- BUILD QUESTION SET ---------- */
