@@ -195,42 +195,97 @@
     box-shadow: 0 3px 0 var(--line); transition: all 0.1s;
   }
   .icon-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
-  .icon-btn.hint { color: #d4a017; border-color: var(--yellow); box-shadow: 0 3px 0 var(--yellow); }
-  /* 💡ボタンが「計算ヒント有効中」状態のとき */
-  .icon-btn.hint.active {
-    background: var(--green);
-    color: white;
-    border-color: var(--green);
-    box-shadow: 0 3px 0 var(--green);
+  /* ============ ヒントボタン (計算スペース右上) ============ */
+  .hint-btn-container {
+    position: absolute;
+    top: 1.5vh;
+    right: 1.5vh;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3vh;
+    background: white;
+    border: 3px solid var(--yellow);
+    border-radius: 1.2vw;
+    padding: 1vh 1.4vw;
+    box-shadow: 0 4px 0 var(--yellow), 0 6px 16px rgba(245, 200, 66, 0.25);
+    cursor: pointer;
+    font-family: var(--font-display);
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    /* 「ここにあるよ」と存在感を出すため、常時ふんわり光る */
+    animation: hintIdleGlow 2.5s ease-in-out infinite;
   }
-  /* 💡ボタンが「ここにあるよ」と知らせる点滅 (緑のオーラ) */
-  .icon-btn.hint.attention {
-    animation: hintAttention 1s ease-in-out infinite;
+  .hint-btn-container:hover {
+    transform: translateY(-2px);
+  }
+  .hint-btn-container:active,
+  .hint-btn-container.pressing {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--yellow);
+  }
+  .hint-btn-icon {
+    font-size: clamp(1.4rem, 3vh, 2rem);
+    line-height: 1;
+  }
+  .hint-btn-label {
+    font-size: clamp(0.7rem, 1.2vh, 0.9rem);
+    font-weight: 700;
+    color: #b8860b;
+    letter-spacing: 0.08em;
+  }
+  /* デフォルトの「ふんわり光る」アニメ */
+  @keyframes hintIdleGlow {
+    0%, 100% {
+      box-shadow: 0 4px 0 var(--yellow), 0 6px 16px rgba(245, 200, 66, 0.25);
+    }
+    50% {
+      box-shadow: 0 4px 0 var(--yellow), 0 6px 24px rgba(245, 200, 66, 0.55);
+    }
+  }
+  /* 計算ヒント有効中の active 状態 */
+  .hint-btn-container.active {
+    background: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 4px 0 #468055, 0 6px 16px rgba(90, 159, 107, 0.3);
+    animation: none;
+  }
+  .hint-btn-container.active .hint-btn-label {
+    color: white;
+  }
+  .hint-btn-container.active .hint-btn-icon {
+    filter: brightness(1.3);
+  }
+  /* 「ここを押して」と気づかせる強い点滅 */
+  .hint-btn-container.attention {
+    animation: hintAttention 0.9s ease-in-out infinite;
+    border-color: var(--green);
   }
   @keyframes hintAttention {
     0%, 100% {
       transform: scale(1);
-      box-shadow: 0 3px 0 var(--yellow), 0 0 0 0 rgba(90, 159, 107, 0.8);
+      box-shadow: 0 4px 0 var(--green), 0 0 0 0 rgba(90, 159, 107, 0.7);
     }
     50% {
       transform: scale(1.15);
-      box-shadow: 0 3px 0 var(--yellow), 0 0 0 14px rgba(90, 159, 107, 0);
+      box-shadow: 0 4px 0 var(--green), 0 0 0 16px rgba(90, 159, 107, 0);
     }
   }
-  /* 長押し中の視覚フィードバック (リング表示) */
-  .icon-btn.hint.pressing::after {
+  /* 長押し中の青いリング */
+  .hint-btn-container.pressing::after {
     content: "";
     position: absolute;
-    inset: -4px;
-    border-radius: 50%;
+    inset: -6px;
+    border-radius: 1.5vw;
     border: 3px solid var(--blue);
-    opacity: 0.6;
-    animation: longPressRing 0.6s linear forwards;
+    opacity: 0.7;
+    pointer-events: none;
+    animation: longPressRing 0.5s linear forwards;
   }
-  .icon-btn.hint { position: relative; }
   @keyframes longPressRing {
-    0%   { transform: scale(0.8); opacity: 0.3; }
-    100% { transform: scale(1.4); opacity: 0; }
+    0%   { transform: scale(0.85); opacity: 0.4; }
+    100% { transform: scale(1.25); opacity: 0; }
   }
 
   .main-body {
@@ -824,6 +879,18 @@
       border-radius: 3vw;
     }
 
+    /* スマホ縦: ヒントボタンを少し小さく */
+    .hint-btn-container {
+      top: 1vh;
+      right: 1vh;
+      padding: 0.7vh 2vw;
+      border-radius: 2.5vw;
+      border-width: 2px;
+      gap: 0.1vh;
+    }
+    .hint-btn-icon { font-size: 1.2rem; }
+    .hint-btn-label { font-size: 0.65rem; }
+
     /* コントロールエリア */
     .controls {
       flex: 1;
@@ -921,6 +988,18 @@
     .numpad-panel { padding: 0.8vh 1.5vw; }
     .num-btn { font-size: clamp(1.2rem, 4.5vw, 1.6rem); }
     .numpad-grid { gap: 0.6vw; }
+
+    /* スマホ横向き: ヒントボタンを小さく */
+    .hint-btn-container {
+      top: 0.5vh;
+      right: 0.5vh;
+      padding: 0.4vh 1.2vw;
+      border-width: 2px;
+      border-radius: 1.5vw;
+      gap: 0;
+    }
+    .hint-btn-icon { font-size: 1rem; }
+    .hint-btn-label { font-size: 0.6rem; }
   }
 </style>
 </head>
@@ -964,7 +1043,6 @@
     </div>
     <div class="right">
       <div class="pill">⭕ <span class="num" id="correctDisplay">0</span></div>
-      <button class="icon-btn hint" id="hintBtn" title="タップ:けいさんヒント / 長押し:くくひょう">💡</button>
     </div>
   </div>
 
@@ -973,6 +1051,11 @@
       <div class="calc-grid" id="calcGrid">
         <div class="division" id="division"></div>
       </div>
+      <!-- ヒントボタン (計算スペース右上) -->
+      <button class="hint-btn-container" id="hintBtn" title="タップ:けいさんヒント / 長押し:くくひょう">
+        <span class="hint-btn-icon">💡</span>
+        <span class="hint-btn-label">ヒント</span>
+      </button>
       <!-- 大きな赤丸（正解時に表示） -->
       <div class="big-maru" id="bigMaru" style="display:none;">
         <div class="maru-svg-wrap">
