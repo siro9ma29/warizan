@@ -196,6 +196,42 @@
   }
   .icon-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
   .icon-btn.hint { color: #d4a017; border-color: var(--yellow); box-shadow: 0 3px 0 var(--yellow); }
+  /* 💡ボタンが「計算ヒント有効中」状態のとき */
+  .icon-btn.hint.active {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+    box-shadow: 0 3px 0 var(--green);
+  }
+  /* 💡ボタンが「ここにあるよ」と知らせる点滅 (緑のオーラ) */
+  .icon-btn.hint.attention {
+    animation: hintAttention 1s ease-in-out infinite;
+  }
+  @keyframes hintAttention {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 3px 0 var(--yellow), 0 0 0 0 rgba(90, 159, 107, 0.8);
+    }
+    50% {
+      transform: scale(1.15);
+      box-shadow: 0 3px 0 var(--yellow), 0 0 0 14px rgba(90, 159, 107, 0);
+    }
+  }
+  /* 長押し中の視覚フィードバック (リング表示) */
+  .icon-btn.hint.pressing::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 3px solid var(--blue);
+    opacity: 0.6;
+    animation: longPressRing 0.6s linear forwards;
+  }
+  .icon-btn.hint { position: relative; }
+  @keyframes longPressRing {
+    0%   { transform: scale(0.8); opacity: 0.3; }
+    100% { transform: scale(1.4); opacity: 0; }
+  }
 
   .main-body {
     flex: 1;
@@ -263,6 +299,60 @@
     background: rgba(245, 200, 66, 0.4);
     border-radius: 6px;
     box-shadow: 0 0 0 2px rgba(245, 200, 66, 0.7);
+  }
+  /* ヒント: 計算ソースとなる数字を緑のパルスで強調 */
+  .cell.hint-source {
+    color: var(--green);
+    animation: hintPulse 1.4s ease-in-out infinite;
+    border-radius: 6px;
+    z-index: 3;
+  }
+  @keyframes hintPulse {
+    0%, 100% {
+      background: rgba(90, 159, 107, 0.15);
+      box-shadow: 0 0 0 2px rgba(90, 159, 107, 0.4);
+      transform: scale(1);
+    }
+    50% {
+      background: rgba(90, 159, 107, 0.35);
+      box-shadow: 0 0 0 4px rgba(90, 159, 107, 0.7);
+      transform: scale(1.08);
+    }
+  }
+  /* divisorセルもhint-sourceになり得る */
+  .divisor-cell.hint-source {
+    color: var(--green);
+    animation: hintPulse 1.4s ease-in-out infinite;
+    border-radius: 6px;
+    z-index: 3;
+  }
+  /* 演算記号ヒント (÷ × -) */
+  .op-hint {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: calc(var(--cell) * 0.5);
+    color: var(--green);
+    pointer-events: none;
+    z-index: 4;
+    background: white;
+    border: 2px solid var(--green);
+    border-radius: 50%;
+    width: calc(var(--cell) * 0.55);
+    height: calc(var(--cell) * 0.55);
+    box-shadow: 0 2px 8px rgba(90, 159, 107, 0.35);
+    animation: opHintIn 0.35s ease-out, opHintBounce 1.4s ease-in-out 0.35s infinite;
+  }
+  @keyframes opHintIn {
+    0%   { transform: scale(0) rotate(-90deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg);   opacity: 1; }
+  }
+  @keyframes opHintBounce {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.15); }
   }
   .cell.error {
     animation: shake 0.5s, flashRed 0.6s 3;
@@ -575,6 +665,18 @@
     text-align: center; color: var(--ink); margin-bottom: 2vh;
   }
   .modal-title .deco { color: var(--accent); }
+  /* モーダル下部の使い方説明 */
+  .modal-hint-note {
+    margin-top: 2vh;
+    text-align: center;
+    font-family: var(--font-hand);
+    font-size: clamp(0.75rem, 1.4vh, 0.95rem);
+    color: var(--ink-soft);
+    background: var(--paper-2);
+    padding: 1vh 2vw;
+    border-radius: 999px;
+    border: 1px dashed var(--line);
+  }
   .kuku-table {
     display: grid;
     grid-template-columns: auto repeat(9, 1fr);
@@ -862,7 +964,7 @@
     </div>
     <div class="right">
       <div class="pill">⭕ <span class="num" id="correctDisplay">0</span></div>
-      <button class="icon-btn hint" id="hintBtn" title="ヒント (くくひょう)">💡</button>
+      <button class="icon-btn hint" id="hintBtn" title="タップ:けいさんヒント / 長押し:くくひょう">💡</button>
     </div>
   </div>
 
@@ -954,6 +1056,7 @@
     <button class="modal-close" id="hintCloseBtn">×</button>
     <div class="modal-title"><span class="deco">★</span> くくひょう <span class="deco">★</span></div>
     <div class="kuku-table" id="kukuTable"></div>
+    <div class="modal-hint-note">💡 タップ:けいさんヒント　長押し:くくひょう</div>
   </div>
 </div>
 
@@ -1363,6 +1466,232 @@ function renderDivision() {
 /* ---------- SPOTLIGHT ---------- */
 function clearSpotlight() {
   document.querySelectorAll('.cell.spot').forEach(c => c.classList.remove('spot'));
+  clearHints();
+}
+
+/* ---------- HINT (固定モード時の計算ソース表示) ---------- */
+function clearHints() {
+  // hint-source クラスを削除
+  document.querySelectorAll('.hint-source').forEach(c => c.classList.remove('hint-source'));
+  // 演算記号ヒントを削除
+  document.querySelectorAll('.op-hint').forEach(el => el.remove());
+}
+
+/* 計算に使う数字をヒント表示する
+   step.kind に応じて、計算ソースとなるセルに hint-source クラスを付与し、
+   間に演算記号(÷ × -)を配置する
+   表示条件:
+   - ランダムモードでは出さない
+   - 固定モードでは:
+     - 1〜3問目: 常に表示
+     - 4〜5問目: hintRequested フラグが true のときのみ表示 */
+function showHintForStep(step) {
+  clearHints();
+  if (state.mode === 'random') return;
+  if (!step) return;
+
+  // 4〜5問目はヒント要求されたときのみ表示
+  const qNum = state.qIdx + 1;
+  const autoShow = (qNum <= 3);
+  if (!autoShow && !state.current.hintRequested) return;
+
+  const c = state.current;
+  const plan = c.plan;
+  const stage = plan.stageData[step.position];
+  const cell = getCellSize();
+
+  // 該当ステップで計算に使う「左側ソース」のセルIDリストと「右側ソース」を返すヘルパー
+  function highlight(ids) {
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hint-source');
+    });
+  }
+
+  // 2つのセル(またはセルグループ)の間に演算記号を配置する
+  // leftIds と rightIds の中央の中間位置に op-hint を置く
+  function placeOpHint(leftIds, rightIds, opSymbol) {
+    const div = document.getElementById('division');
+    if (!div) return;
+    const allIds = [...leftIds, ...rightIds];
+    if (allIds.length === 0) return;
+
+    // 各セルの位置(left+width/2, top+height/2)を取得
+    const positions = allIds.map(id => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      // 数値で取得 (例: '75px' → 75)
+      const l = parseFloat(el.style.left) || 0;
+      const t = parseFloat(el.style.top) || 0;
+      return { l: l + cell / 2, t: t + cell / 2 };
+    }).filter(p => p);
+
+    if (positions.length < 2) return;
+
+    // 左ソースの右端 と 右ソースの左端 の中間に配置
+    const leftPositions = leftIds.map(id => {
+      const el = document.getElementById(id);
+      return el ? parseFloat(el.style.left) + cell : null;
+    }).filter(v => v !== null);
+    const rightPositions = rightIds.map(id => {
+      const el = document.getElementById(id);
+      return el ? parseFloat(el.style.left) : null;
+    }).filter(v => v !== null);
+
+    if (leftPositions.length === 0 || rightPositions.length === 0) return;
+
+    const leftEdge = Math.max(...leftPositions);
+    const rightEdge = Math.min(...rightPositions);
+    const centerX = (leftEdge + rightEdge) / 2;
+
+    // 縦位置は左右ソースの中心の平均
+    const allTops = positions.map(p => p.t);
+    const centerY = allTops.reduce((a, b) => a + b, 0) / allTops.length;
+
+    const opSize = cell * 0.55;
+    const op = document.createElement('div');
+    op.className = 'op-hint';
+    op.style.left = (centerX - opSize / 2) + 'px';
+    op.style.top  = (centerY - opSize / 2) + 'px';
+    op.textContent = opSymbol;
+    div.appendChild(op);
+  }
+
+  if (step.kind === 'tateru') {
+    // 「○ ÷ ◇ は…?」: partial の数字 と divisor を強調
+    const partialIds = getPartialCellIds(step.position);
+    const divisorEl = document.querySelector('.divisor-cell');
+    if (divisorEl) divisorEl.classList.add('hint-source');
+    highlight(partialIds);
+    // ÷ 記号を divisor の左上に配置 (数字には被らない)
+    placeOpHintAtDivisorCorner('÷');
+  }
+  else if (step.kind === 'kakeru') {
+    // 「○ × ◇ は…?」: 商の今立てた数字 と divisor を強調
+    const qId = `q-${step.position}`;
+    const qEl = document.getElementById(qId);
+    if (qEl) qEl.classList.add('hint-source');
+    const divisorEl = document.querySelector('.divisor-cell');
+    if (divisorEl) divisorEl.classList.add('hint-source');
+    // × 記号を 商マス と divisor の間に置く
+    // ただし商マスは row=0, divisorは row=1 なので、両者を結ぶ位置(対角線の中点)に
+    placeOpHintBetweenCells(qId, null, '×', { useDivisor: true });
+  }
+  else if (step.kind === 'hiku') {
+    // 「○ - ◇ は…?」: partial と product を強調
+    const partialIds = getPartialCellIds(step.position);
+    const prodLen = String(stage.product).length;
+    const prodStartCol = stage.partialEnd - prodLen + 1;
+    const prodIds = [];
+    for (let i = prodStartCol; i <= stage.partialEnd; i++) {
+      prodIds.push(`p-${step.position}-${i}`);
+    }
+    highlight(partialIds);
+    highlight(prodIds);
+    // − 記号を product 行の左隣マスに配置 (教科書通りの位置)
+    placeOpHintLeftOfProduct(prodIds, '−');
+  }
+  // orosu はヒント不要(既存のドロップアニメで十分)
+}
+
+/* 与えられた position に対する partial を構成するセルIDリストを返す
+   - 初回ステージ: dividend digits の partialStart..partialEnd
+   - 2回目以降: 前ステージの remainder 行で数字が表示されているセル全て */
+function getPartialCellIds(position) {
+  const c = state.current;
+  const plan = c.plan;
+  const stage = plan.stageData[position];
+  const stageIdx = plan.activeStages.indexOf(position);
+  const ids = [];
+  if (stageIdx === 0) {
+    for (let i = stage.partialStart; i <= stage.partialEnd; i++) {
+      ids.push(`d-${i}`);
+    }
+  } else {
+    const prevStage = plan.activeStages[stageIdx - 1];
+    for (let i = 0; i < c.n; i++) {
+      const el = document.getElementById(`r-${prevStage}-${i}`);
+      if (el && el.textContent !== '') ids.push(`r-${prevStage}-${i}`);
+    }
+  }
+  return ids;
+}
+
+/* ÷ 記号を divisor の真下(空きマス)に配置 (数字に被らない) */
+function placeOpHintAtDivisorCorner(opSymbol) {
+  const div = document.getElementById('division');
+  const divisorEl = document.querySelector('.divisor-cell');
+  if (!div || !divisorEl) return;
+  const cell = getCellSize();
+
+  const dLeft = parseFloat(divisorEl.style.left);
+  const dTop  = parseFloat(divisorEl.style.top);
+
+  // 配置: divisor のちょうど真下のマス(空き)に置く
+  // divisorは col=0, row=1 → その真下(col=0, row=2)は積行の左端で空きスペース
+  const opSize = cell * 0.55;
+  const cx = dLeft + cell / 2;        // divisorと同じ列の中央
+  const cy = dTop + cell + cell / 2;  // 1マス下の中央
+
+  const op = document.createElement('div');
+  op.className = 'op-hint';
+  op.style.left = (cx - opSize / 2) + 'px';
+  op.style.top  = (cy - opSize / 2) + 'px';
+  op.textContent = opSymbol;
+  div.appendChild(op);
+}
+
+/* − 記号を product 行の左隣マスに配置 (算数教科書通り) */
+function placeOpHintLeftOfProduct(prodIds, opSymbol) {
+  const div = document.getElementById('division');
+  if (!div || prodIds.length === 0) return;
+  const cell = getCellSize();
+
+  // product の最左セルの位置を取得
+  const leftMostId = prodIds[0]; // prodIdsは左から右の順
+  const el = document.getElementById(leftMostId);
+  if (!el) return;
+  const pLeft = parseFloat(el.style.left);
+  const pTop  = parseFloat(el.style.top);
+
+  // product 行の1マス左の中央に配置
+  // ただしバッジサイズはcell*0.55なので、マス中央に来るよう調整
+  const opSize = cell * 0.55;
+  const cx = pLeft - cell / 2;      // 左隣マスの中央
+  const cy = pTop + cell / 2;       // product行の中央高さ
+
+  const op = document.createElement('div');
+  op.className = 'op-hint';
+  op.style.left = (cx - opSize / 2) + 'px';
+  op.style.top  = (cy - opSize / 2) + 'px';
+  op.textContent = opSymbol;
+  div.appendChild(op);
+}
+
+/* 商マス (q-X) と divisor を結ぶ位置に演算記号を配置 (× 用) */
+function placeOpHintBetweenCells(qId, _unused, opSymbol, opts) {
+  const div = document.getElementById('division');
+  const qEl = document.getElementById(qId);
+  const divisorEl = document.querySelector('.divisor-cell');
+  if (!div || !qEl || !divisorEl) return;
+  const cell = getCellSize();
+
+  const qLeft = parseFloat(qEl.style.left);
+  const qTop  = parseFloat(qEl.style.top);
+  const dLeft = parseFloat(divisorEl.style.left);
+  const dTop  = parseFloat(divisorEl.style.top);
+
+  // 中点
+  const cx = (qLeft + cell / 2 + dLeft + cell / 2) / 2;
+  const cy = (qTop + cell / 2 + dTop + cell / 2) / 2;
+
+  const opSize = cell * 0.55;
+  const op = document.createElement('div');
+  op.className = 'op-hint';
+  op.style.left = (cx - opSize / 2) + 'px';
+  op.style.top  = (cy - opSize / 2) + 'px';
+  op.textContent = opSymbol;
+  div.appendChild(op);
 }
 
 function spotlightForStep(step) {
@@ -1530,11 +1859,15 @@ function handleStepClick(stepKind) {
   if (!expected) return;
   if (c.stepConfirmed) return;
 
+  // 操作があったのでアイドルタイマーリセット
+  resetIdleTimer();
+
   if (stepKind === expected.kind) {
     c.stepConfirmed = true;
     c.inputBuffer = [];
     enableNumpad(true);
     spotlightForStep(expected);
+    showHintForStep(expected);  // 固定モードのときは計算ソースを強調表示
     updateStepHint();
   } else {
     const btn = document.querySelector(`.step-btn[data-step="${stepKind}"]`);
@@ -1543,6 +1876,8 @@ function handleStepClick(stepKind) {
       setTimeout(() => btn.classList.remove('wrong'), 600);
     }
     c.errorCount++;
+    // 誤答時: 4〜5問目でヒント未要求なら、ヒントボタンを点滅
+    triggerHintAttention();
   }
 }
 
@@ -1551,6 +1886,9 @@ function handleNumClick(num) {
   if (!c || c.completed || !c.stepConfirmed) return;
   const step = c.plan.steps[c.stepIdx];
   if (!step) return;
+
+  // 操作があったのでアイドルタイマーリセット
+  resetIdleTimer();
 
   const expected = getExpectedDigits(step);
   const cellIds = getInputCellIds(step);
@@ -1609,6 +1947,8 @@ function handleNumClick(num) {
       setTimeout(() => numBtn.classList.remove('wrong'), 600);
     }
     c.errorCount++;
+    // 誤答時: 4〜5問目でヒント未要求なら、ヒントボタンを点滅
+    triggerHintAttention();
   }
 }
 
@@ -1625,6 +1965,7 @@ function advanceStep() {
     c.completed = true;
     if (c.errorCount <= 1) state.correctCount++;
     document.getElementById('correctDisplay').textContent = state.correctCount;
+    clearIdleTimer();  // 問題完了時はタイマー不要
     showRemainderTag();
     showCorrectMark();
   } else {
@@ -1712,16 +2053,63 @@ function loadQuestion() {
     dividend, divisor, plan,
     digits: plan.digits, n: plan.n,
     stepIdx: 0, stepConfirmed: false, inputBuffer: [],
-    errorCount: 0, completed: false
+    errorCount: 0, completed: false,
+    hintRequested: false  // 4〜5問目で「ヒントを見せて」と要求されたか
   };
   document.getElementById('qNumDisplay').textContent = state.qIdx + 1;
   document.getElementById('qTotalDisplay').textContent = state.questions.length;
   // ランダムモードでは、毎問「たてる/かける/ひく/おろす」の表示順をシャッフル
   shuffleStepButtons(state.mode === 'random');
+  // 計算ヒントボタンの表示制御
+  updateCalcHintButton();
   renderDivision();
   updateStepHint();
   enableNumpad(false);
   clearSpotlight();
+  // アイドルタイマー開始 (4〜5問目で点滅させるため)
+  resetIdleTimer();
+}
+
+/* 計算ヒントボタン (💡) の状態を更新
+   - ボタン自体は常時表示 (九九表機能もあるため)
+   - active / attention クラスのみ問題に応じて切り替える */
+function updateCalcHintButton() {
+  const btn = document.getElementById('hintBtn');
+  if (!btn) return;
+  // 新問題開始時は active/attention 解除
+  btn.classList.remove('attention', 'active');
+}
+
+/* ---------- アイドル検知 ---------- */
+let idleTimer = null;
+const IDLE_MS = 10000; // 10秒
+function resetIdleTimer() {
+  if (idleTimer) clearTimeout(idleTimer);
+  // 既にヒント要求済みなら点滅させる必要なし
+  if (!state.current || state.current.hintRequested) return;
+  const qNum = state.qIdx + 1;
+  // 固定モードかつ4〜5問目のみ点滅対象
+  if (state.mode !== 'fixed' || qNum <= 3) return;
+  idleTimer = setTimeout(() => {
+    triggerHintAttention();
+  }, IDLE_MS);
+}
+
+function clearIdleTimer() {
+  if (idleTimer) clearTimeout(idleTimer);
+  idleTimer = null;
+}
+
+/* ヒントボタンに「ここを押して」と気づかせる点滅 */
+function triggerHintAttention() {
+  const btn = document.getElementById('hintBtn');
+  if (!btn) return;
+  // 既に要求済みなら点滅不要
+  if (state.current && state.current.hintRequested) return;
+  // 固定モードかつ4〜5問目のみ点滅対象
+  const qNum = state.qIdx + 1;
+  if (state.mode !== 'fixed' || qNum <= 3) return;
+  btn.classList.add('attention');
 }
 
 /* ---------- STEP BUTTONS SHUFFLE ----------
@@ -1848,9 +2236,71 @@ function buildKukuTable() {
 /* ---------- HINT MODAL ---------- */
 function setupHintModal() {
   const modal = document.getElementById('hintModal');
-  document.getElementById('hintBtn').onclick = () => modal.classList.add('active');
+  const btn = document.getElementById('hintBtn');
   document.getElementById('hintCloseBtn').onclick = () => modal.classList.remove('active');
   modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
+
+  /* 💡ボタンのタップ/長押し処理
+     - タップ (短く押す): 計算ヒントON (固定モード4〜5問目で有効)
+     - 長押し (500ms以上): 九九表モーダル表示 */
+  const LONG_PRESS_MS = 500;
+  let pressTimer = null;
+  let longPressed = false;
+
+  function startPress(e) {
+    e.preventDefault();
+    longPressed = false;
+    btn.classList.add('pressing');
+    pressTimer = setTimeout(() => {
+      // 長押し → 九九表表示
+      longPressed = true;
+      btn.classList.remove('pressing');
+      modal.classList.add('active');
+      // 触覚フィードバック (対応端末のみ)
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, LONG_PRESS_MS);
+  }
+  function endPress(e) {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    btn.classList.remove('pressing');
+    if (longPressed) return; // 長押し済みならタップ処理しない
+    // タップ処理: 計算ヒントON
+    handleHintButtonTap();
+  }
+  function cancelPress() {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    btn.classList.remove('pressing');
+    longPressed = true; // タップとして処理されないようにする
+  }
+
+  // タッチ/マウス両対応
+  btn.addEventListener('touchstart', startPress, { passive: false });
+  btn.addEventListener('touchend', endPress);
+  btn.addEventListener('touchcancel', cancelPress);
+  btn.addEventListener('mousedown', startPress);
+  btn.addEventListener('mouseup', endPress);
+  btn.addEventListener('mouseleave', cancelPress);
+}
+
+/* タップ時の処理: 計算ヒントON */
+function handleHintButtonTap() {
+  if (!state.current) return;
+  const qNum = state.qIdx + 1;
+  // ランダムモードや1〜3問目では計算ヒントは既に表示中(or 出さない)なので、特に何もしない
+  if (state.mode !== 'fixed' || qNum <= 3) {
+    // 何もせず、軽くフィードバック (フェード)
+    return;
+  }
+  // 4〜5問目: ヒント要求フラグを立てて、ヒント表示
+  state.current.hintRequested = true;
+  const btn = document.getElementById('hintBtn');
+  btn.classList.remove('attention');
+  btn.classList.add('active');
+  clearIdleTimer();
+  if (state.current.stepConfirmed) {
+    const step = state.current.plan.steps[state.current.stepIdx];
+    if (step) showHintForStep(step);
+  }
 }
 
 /* ---------- RESULT SCREEN ---------- */
@@ -1907,6 +2357,7 @@ function setupMainScreen() {
     if (confirm('タイトルへ もどりますか？ いまの もんだいは リセットされます。')) {
       document.getElementById('bigMaru').style.display = 'none';
       document.getElementById('nextQBtn').classList.remove('show');
+      clearIdleTimer();
       showScreen('titleScreen');
     }
   };
@@ -1937,10 +2388,13 @@ function handleResize() {
   const snap = captureDivisionSnapshot();
   renderDivision();
   applyDivisionSnapshot(snap);
-  // スポットライトは再計算
+  // スポットライトとヒントは再計算
   if (state.current.stepConfirmed) {
     const step = state.current.plan.steps[state.current.stepIdx];
-    if (step) spotlightForStep(step);
+    if (step) {
+      spotlightForStep(step);
+      showHintForStep(step);
+    }
   }
 }
 window.addEventListener('resize', () => {
