@@ -2154,13 +2154,19 @@ function loadQuestion() {
 }
 
 /* 計算ヒントボタン (💡) の状態を更新
-   - ボタン自体は常時表示 (九九表機能もあるため)
-   - active / attention クラスのみ問題に応じて切り替える */
+   - ランダムモード: 完全に非表示 (ヒント機能も九九表機能も使わない)
+   - 固定モード: 常時表示、active/attention クラスのみ問題に応じて切り替え */
 function updateCalcHintButton() {
   const btn = document.getElementById('hintBtn');
   if (!btn) return;
   // 新問題開始時は active/attention 解除
   btn.classList.remove('attention', 'active');
+  // ランダムモードでは非表示
+  if (state.mode === 'random') {
+    btn.style.display = 'none';
+  } else {
+    btn.style.display = '';
+  }
 }
 
 /* ---------- アイドル検知 ---------- */
