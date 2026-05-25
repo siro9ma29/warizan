@@ -356,9 +356,10 @@
     box-shadow: 0 0 0 2px rgba(245, 200, 66, 0.7);
   }
   /* ヒント: 計算ソースとなる数字を緑のパルスで強調 */
-  .cell.hint-source {
-    color: var(--green);
-    animation: hintPulse 1.4s ease-in-out infinite;
+  .cell.hint-source,
+  .divisor-cell.hint-source {
+    color: var(--green) !important;
+    animation: hintPulse 1.4s ease-in-out infinite !important;
     border-radius: 6px;
     z-index: 3;
   }
@@ -373,13 +374,6 @@
       box-shadow: 0 0 0 4px rgba(90, 159, 107, 0.7);
       transform: scale(1.08);
     }
-  }
-  /* divisorセルもhint-sourceになり得る */
-  .divisor-cell.hint-source {
-    color: var(--green);
-    animation: hintPulse 1.4s ease-in-out infinite;
-    border-radius: 6px;
-    z-index: 3;
   }
   /* 演算記号ヒント (÷ × -) */
   .op-hint {
@@ -427,6 +421,15 @@
   .cell.faded {
     color: var(--line);
     opacity: 0.5;
+  }
+  /* 薄字(faded)の0は計算ソースとして扱わない (例: 「09÷3」と誤読されるのを防ぐ)
+     hint-sourceクラスが付いても、fadedの見た目を優先する */
+  .cell.faded.hint-source {
+    color: var(--line) !important;
+    opacity: 0.5 !important;
+    animation: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 
   /* divisor（わる数）+ ブラケット記号 */
@@ -1743,7 +1746,11 @@ function getPartialCellIds(position) {
     const prevStage = plan.activeStages[stageIdx - 1];
     for (let i = 0; i < c.n; i++) {
       const el = document.getElementById(`r-${prevStage}-${i}`);
-      if (el && el.textContent !== '') ids.push(`r-${prevStage}-${i}`);
+      if (!el || el.textContent === '') continue;
+      // 薄字(faded)の0はpartialの計算には意味があるが、視覚的にはノイズになるので
+      // hint-source対象から除外する (例: 「09÷3」と見えて混乱するのを防ぐ)
+      if (el.classList.contains('faded')) continue;
+      ids.push(`r-${prevStage}-${i}`);
     }
   }
   return ids;
@@ -1832,30 +1839,16 @@ function spotlightForStep(step) {
   if (!step) return;
   const stage = plan.stageData[step.position];
 
+  // ※ 黄色のスポットは「答えを書く場所」のみに付ける
+  //   (計算ソースは緑のパルスで showHintForStep が表示する)
+
   if (step.kind === 'tateru') {
-    // partial を構成するわられる数のマス + 商マス
-    // ※ 一段下のステージの「ひいた結果＋おろされた数字」もpartialを構成するが、
-    //   その行のセルにもスポットを当てる
-    const stageIdx = plan.activeStages.indexOf(step.position);
-    if (stageIdx === 0) {
-      // 初回ステージ: dividend digits[partialStart..partialEnd]
-      for (let i = stage.partialStart; i <= stage.partialEnd; i++) {
-        const c = document.getElementById(`d-${i}`);
-        if (c) c.classList.add('spot');
-      }
-    } else {
-      // 2回目以降: 前ステージのremainder行 全体に出てる数字をハイライト
-      const prevStage = plan.activeStages[stageIdx - 1];
-      // 前ステージのr-行で、表示されている全てのセルをハイライト
-      const remRow = document.querySelectorAll(`[id^="r-${prevStage}-"]`);
-      remRow.forEach(el => {
-        if (el.textContent !== '') el.classList.add('spot');
-      });
-    }
+    // 答えを書く場所 = 商マスのみ
     const q = document.getElementById(`q-${step.position}`);
     if (q) q.classList.add('spot');
   }
   else if (step.kind === 'kakeru') {
+    // 答えを書く場所 = 積を書くマス
     const prodLen = String(stage.product).length;
     const startCol = stage.partialEnd - prodLen + 1;
     for (let i = startCol; i <= stage.partialEnd; i++) {
@@ -1864,6 +1857,7 @@ function spotlightForStep(step) {
     }
   }
   else if (step.kind === 'hiku') {
+    // 答えを書く場所 = ひいた結果を書くマス
     const remLen = String(stage.remainder).length || 1;
     const startCol = stage.partialEnd - remLen + 1;
     for (let i = startCol; i <= stage.partialEnd; i++) {
@@ -1872,10 +1866,7 @@ function spotlightForStep(step) {
     }
   }
   else if (step.kind === 'orosu') {
-    // おろされる元のわられる数マス
-    const d = document.getElementById(`d-${step.position}`);
-    if (d) d.classList.add('spot');
-    // 前のステージの remainder 行の、step.position 列（おろし先）
+    // 答えを書く場所 = おろした数字を書くマス (前のステージのremainder行の該当列)
     const prevActive = [...plan.activeStages].filter(p => p < step.position).pop();
     if (prevActive !== undefined) {
       const c = document.getElementById(`r-${prevActive}-${step.position}`);
