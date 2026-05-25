@@ -94,10 +94,10 @@
 
   .level-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1.2vw;
-    width: 92vw;
-    max-width: 1100px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1vw;
+    width: 94vw;
+    max-width: 1200px;
   }
   .level-card {
     background: white; border: 2px solid var(--line);
@@ -825,7 +825,7 @@
 
   @media (max-width: 900px) {
     .main-body { grid-template-columns: 1fr; }
-    .level-grid { grid-template-columns: repeat(2, 1fr); }
+    .level-grid { grid-template-columns: repeat(3, 1fr); }
   }
 
   /* ============ スマホ縦長対応 ============ */
@@ -1150,6 +1150,15 @@
    ============================================================ */
 
 /* ---------- LEVEL DEFINITIONS (5段階) ---------- */
+/* ---------- LEVEL DEFINITIONS (6段階) ----------
+   レベルの意図:
+   Lv1: 2桁÷1桁、あまりなし、商に0なし
+   Lv2: 2桁÷1桁、あまりあり、商に0なし
+   Lv3: 2桁÷1桁、商の一の位が0
+   Lv4: 3桁÷1桁、商が百の位から立つ、商に0なし
+   Lv5: 3桁÷1桁、商の十の位か一の位に0
+   Lv6: 3桁÷1桁、百の位に商が立たない(商は2桁)
+*/
 const LEVELS = {
   1: {
     title: 'レベル 1',
@@ -1159,11 +1168,11 @@ const LEVELS = {
       [96, 3], [88, 4], [77, 7], [66, 6], [99, 3]
     ],
     randomGen: () => {
-      // 2桁÷1桁、あまりなし、商も2桁になる
+      // 2桁÷1桁、あまりなし、商の各桁が0でない (商は2桁)
       while (true) {
         const div = rand(2, 9);
         const q1 = rand(1, 9);
-        const q2 = rand(0, 9);
+        const q2 = rand(1, 9);  // 一の位も0以外
         const quotient = q1 * 10 + q2;
         const dividend = quotient * div;
         if (dividend >= 10 && dividend <= 99) return [dividend, div];
@@ -1178,65 +1187,105 @@ const LEVELS = {
       [73, 5], [89, 7], [94, 8], [67, 3], [85, 6]
     ],
     randomGen: () => {
+      // 2桁÷1桁、あまりあり、商の各桁が0でない (商は2桁)
       while (true) {
         const div = rand(2, 9);
         const dividend = rand(10, 99);
-        if (dividend % div !== 0 && Math.floor(dividend / div) >= 10) {
-          return [dividend, div];
-        }
+        if (dividend % div === 0) continue;
+        const q = Math.floor(dividend / div);
+        if (q < 10) continue;            // 商が2桁
+        if (String(q).includes('0')) continue;  // 商に0が含まれない
+        return [dividend, div];
       }
     }
   },
   3: {
     title: 'レベル 3',
-    desc: '3けた÷1けた\nきほん',
+    desc: '2けた÷1けた\n商の一の位が0',
     fixed: [
-      [648, 2], [846, 3], [963, 3], [884, 4], [555, 5],
-      [726, 3], [847, 4], [639, 3], [728, 2], [965, 5]
+      // ▼ 前半5問: 被除数の一の位が「0以外」 (商の一の位は0)
+      [82, 4],   // 商20あまり2
+      [62, 3],   // 商20あまり2
+      [65, 6],   // 商10あまり5
+      [92, 3],   // 商30あまり2
+      [61, 2],   // 商30あまり1
+      // ▼ 後半5問: 被除数の一の位が「0」 (商の一の位も0)
+      [80, 4],   // 商20あまり0
+      [60, 3],   // 商20あまり0
+      [60, 6],   // 商10あまり0
+      [90, 3],   // 商30あまり0
+      [80, 2]    // 商40あまり0
     ],
     randomGen: () => {
+      // 2桁÷1桁、商の一の位が0、商は2桁(商10〜90で一の位=0)
+      // 被除数の一の位は0でも0以外でもOK (あまりあり・なし両方)
       while (true) {
         const div = rand(2, 9);
-        const dividend = rand(100, 999);
-        const firstDigit = Math.floor(dividend / 100);
-        if (firstDigit >= div) return [dividend, div];
+        const q10 = rand(1, 9);              // 商の十の位
+        const quotient = q10 * 10;            // 一の位は0
+        const remainder = rand(0, div - 1);   // あまり0以上
+        const dividend = quotient * div + remainder;
+        if (dividend >= 10 && dividend <= 99) return [dividend, div];
       }
     }
   },
   4: {
     title: 'レベル 4',
-    desc: '3けた÷1けた\n商が十の位から',
+    desc: '3けた÷1けた\n商が百の位から',
     fixed: [
-      [234, 5], [156, 4], [378, 6], [245, 7], [128, 3],
-      [186, 8], [342, 9], [275, 6], [168, 7], [189, 4]
+      [648, 2], [846, 3], [963, 3], [884, 4], [555, 5],
+      [726, 3], [847, 4], [639, 3], [728, 2], [965, 5]
     ],
     randomGen: () => {
+      // 3桁÷1桁、商が百の位から立つ(商3桁)、商に0が含まれない
       while (true) {
-        const div = rand(3, 9);
+        const div = rand(2, 9);
         const dividend = rand(100, 999);
         const firstDigit = Math.floor(dividend / 100);
-        if (firstDigit < div) return [dividend, div];
+        if (firstDigit < div) continue;          // 商が3桁でない
+        const q = Math.floor(dividend / div);
+        if (q < 100) continue;                   // 念のため(商3桁)
+        if (String(q).includes('0')) continue;   // 商に0なし
+        return [dividend, div];
       }
     }
   },
   5: {
     title: 'レベル 5',
-    desc: '3けた÷1けた\n途中に「0」',
+    desc: '3けた÷1けた\n商の途中に「0」',
     fixed: [
       [612, 3], [824, 4], [915, 3], [728, 7], [612, 6],
-      [824, 8], [536, 4], [618, 6], [728, 4], [824, 2]
+      [824, 8], [515, 5], [618, 6], [725, 7], [402, 4]
     ],
     randomGen: () => {
+      // 3桁÷1桁、商3桁、商の十の位か一の位が0
       while (true) {
         const div = rand(2, 9);
         const dividend = rand(100, 999);
         const firstDigit = Math.floor(dividend / 100);
         if (firstDigit < div) continue;
         const q = Math.floor(dividend / div);
+        if (q < 100) continue;  // 商が3桁である必要
         const qStr = String(q);
-        if (qStr.length >= 2 && qStr.includes('0')) {
-          return [dividend, div];
-        }
+        // 十の位か一の位に0があれば採用
+        if (qStr[1] === '0' || qStr[2] === '0') return [dividend, div];
+      }
+    }
+  },
+  6: {
+    title: 'レベル 6',
+    desc: '3けた÷1けた\n百の位に商が立たない',
+    fixed: [
+      [234, 5], [156, 4], [378, 6], [245, 7], [128, 3],
+      [186, 8], [342, 9], [275, 6], [168, 7], [189, 4]
+    ],
+    randomGen: () => {
+      // 3桁÷1桁、百の位に商が立たない(=被除数の百の位 < divisor)、商は2桁
+      while (true) {
+        const div = rand(3, 9);
+        const dividend = rand(100, 999);
+        const firstDigit = Math.floor(dividend / 100);
+        if (firstDigit < div) return [dividend, div];
       }
     }
   }
@@ -2254,7 +2303,7 @@ function showScreen(id) {
 function setupTitleScreen() {
   const grid = document.getElementById('levelGrid');
   grid.innerHTML = '';
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 6; i++) {
     const lvl = LEVELS[i];
     const card = document.createElement('button');
     card.className = 'level-card';
