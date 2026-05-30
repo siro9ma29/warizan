@@ -94,18 +94,18 @@
 
   .level-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(8, 1fr);
     gap: 1vw;
     width: 94vw;
     max-width: 1200px;
   }
   .level-card {
     background: white; border: 2px solid var(--line);
-    border-radius: 1.2vw; padding: 2vh 1vw;
+    border-radius: 1.2vw; padding: 1.8vh 0.6vw;
     text-align: center; transition: all 0.2s ease;
     box-shadow: 0 4px 0 var(--line);
     min-height: 18vh;
-    display: flex; flex-direction: column; justify-content: center; gap: 0.8vh;
+    display: flex; flex-direction: column; justify-content: center; gap: 0.6vh;
   }
   .level-card:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--line); }
   .level-card.selected {
@@ -115,21 +115,56 @@
   }
   .level-card .lv-num {
     font-family: var(--font-display); font-weight: 900;
-    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-size: clamp(1.6rem, 2.6vw, 2.3rem);
     color: var(--accent); line-height: 1;
+    position: relative;
   }
   .level-card .lv-num small {
-    font-size: 0.45em; color: var(--ink-soft);
+    font-size: 0.42em; color: var(--ink-soft);
     display: block; font-weight: 700; margin-bottom: 0.3em;
+    letter-spacing: 0.05em;
+  }
+  /* 派生レベルの小ラベル (例: 0をたてる) */
+  .level-card .lv-num .lv-sub {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 0.32em; font-weight: 700;
+    color: white; background: var(--purple);
+    border-radius: 999px;
+    padding: 0.25em 0.6em;
+    margin: 0.4em auto 0;
+    width: fit-content;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
   }
   .level-card .lv-title {
     font-family: var(--font-display); font-weight: 700;
-    font-size: clamp(0.85rem, 1.2vw, 1rem); color: var(--ink);
+    font-size: clamp(0.78rem, 1.05vw, 0.95rem); color: var(--ink);
   }
   .level-card .lv-desc {
     font-family: var(--font-hand);
-    font-size: clamp(0.7rem, 1vw, 0.85rem);
+    font-size: clamp(0.65rem, 0.9vw, 0.8rem);
     color: var(--ink-soft); line-height: 1.4;
+  }
+
+  /* レベル6の派生(0をたてる)カード: 紫アクセントで「6の仲間」感を出す */
+  .level-card.variant .lv-num { color: var(--purple); }
+  .level-card.variant.selected {
+    border-color: var(--purple);
+    box-shadow: 0 4px 0 var(--purple);
+    background: #f3eff8;
+  }
+  /* チャレンジカード: 金色アクセントで特別感を出す */
+  .level-card.challenge .lv-num { color: #e0a020; }
+  .level-card.challenge {
+    background: linear-gradient(160deg, #fffdf5, #fff6e0);
+    border-color: var(--yellow);
+    box-shadow: 0 4px 0 var(--yellow);
+  }
+  .level-card.challenge.selected {
+    border-color: #e0a020;
+    box-shadow: 0 4px 0 #e0a020;
+    background: linear-gradient(160deg, #fffaf0, #ffeec0);
   }
 
   .mode-row {
@@ -288,6 +323,32 @@
     100% { transform: scale(1.25); opacity: 0; }
   }
 
+  /* ============ スキップボタン (控えめ・ヒントボタンの左隣) ============ */
+  .skip-btn {
+    position: absolute;
+    top: 1.5vh;
+    /* ヒントボタン(右1.5vh)の左隣に置く。ヒントボタン幅+余白ぶん右から離す */
+    right: calc(1.5vh + 90px);
+    z-index: 6;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 0.6vh 1.1vw;
+    font-family: var(--font-ui);
+    font-size: clamp(0.7rem, 1.1vh, 0.85rem);
+    color: var(--ink-soft);
+    box-shadow: 0 2px 0 var(--line);
+    opacity: 0.55;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .skip-btn:hover { opacity: 0.95; }
+  .skip-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--line);
+    opacity: 1;
+  }
+
   .main-body {
     flex: 1;
     display: grid;
@@ -422,6 +483,30 @@
     color: var(--line);
     opacity: 0.5;
   }
+  /* leadingZeroモードの商の先頭0: 薄く表示(入力直後)。fadedより少し見えるグレーに */
+  .cell.lead-zero {
+    color: var(--ink-soft);
+    opacity: 0.55;
+    position: relative;
+  }
+  /* 問題完了時: 斜線を引いて「消した」ことを示す */
+  .cell.lead-zero.struck::after {
+    content: "";
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    top: 50%;
+    height: 3px;
+    background: var(--accent-2);
+    border-radius: 3px;
+    transform: rotate(-25deg);
+    transform-origin: center;
+    animation: strikeIn 0.35s ease-out forwards;
+  }
+  @keyframes strikeIn {
+    0%   { transform: rotate(-25deg) scaleX(0); opacity: 0; }
+    100% { transform: rotate(-25deg) scaleX(1); opacity: 1; }
+  }
   /* 薄字(faded)の0は計算ソースとして扱わない (例: 「09÷3」と誤読されるのを防ぐ)
      hint-sourceクラスが付いても、fadedの見た目を優先する */
   .cell.faded.hint-source {
@@ -491,6 +576,8 @@
   /* ============ 大きな赤丸（正解マーク） ============ */
   .big-maru {
     position: absolute;
+    /* 位置・サイズは JS(positionCorrectMark)で筆算を避けて動的に設定する。
+       下記はフォールバック値 */
     inset: 0;
     display: flex;
     flex-direction: column;
@@ -501,10 +588,11 @@
     gap: 1vh;
   }
   .big-maru .maru-svg-wrap {
-    width: 55vh;
-    max-width: 75%;
-    height: 55vh;
-    max-height: 75%;
+    /* サイズは JS で配置領域に合わせて上書きする。下記はフォールバック */
+    width: 40vh;
+    max-width: 90%;
+    height: 40vh;
+    max-height: 90%;
     animation: maruDraw 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
   }
   .big-maru svg {
@@ -894,6 +982,14 @@
     .hint-btn-icon { font-size: 1.2rem; }
     .hint-btn-label { font-size: 0.65rem; }
 
+    /* スマホ縦: スキップボタンも合わせて小さく */
+    .skip-btn {
+      top: 1vh;
+      right: calc(1vh + 64px);
+      padding: 0.5vh 2vw;
+      font-size: 0.65rem;
+    }
+
     /* コントロールエリア */
     .controls {
       flex: 1;
@@ -1003,6 +1099,14 @@
     }
     .hint-btn-icon { font-size: 1rem; }
     .hint-btn-label { font-size: 0.6rem; }
+
+    /* スマホ横向き: スキップボタンも小さく */
+    .skip-btn {
+      top: 0.5vh;
+      right: calc(0.5vh + 56px);
+      padding: 0.4vh 1.2vw;
+      font-size: 0.6rem;
+    }
   }
 </style>
 </head>
@@ -1054,6 +1158,8 @@
       <div class="calc-grid" id="calcGrid">
         <div class="division" id="division"></div>
       </div>
+      <!-- スキップボタン (ヒントボタンの左隣・控えめ) -->
+      <button class="skip-btn" id="skipBtn" title="この もんだいを スキップ">スキップ →</button>
       <!-- ヒントボタン (計算スペース右上) -->
       <button class="hint-btn-container" id="hintBtn" title="タップ:けいさんヒント / 長押し:くくひょう">
         <span class="hint-btn-icon">💡</span>
@@ -1153,14 +1259,16 @@
    ============================================================ */
 
 /* ---------- LEVEL DEFINITIONS (5段階) ---------- */
-/* ---------- LEVEL DEFINITIONS (6段階) ----------
-   レベルの意図:
-   Lv1: 2桁÷1桁、あまりなし、商に0なし
-   Lv2: 2桁÷1桁、あまりあり、商に0なし
-   Lv3: 2桁÷1桁、商の一の位が0
-   Lv4: 3桁÷1桁、商が百の位から立つ、商に0なし
-   Lv5: 3桁÷1桁、商の十の位か一の位に0
-   Lv6: 3桁÷1桁、百の位に商が立たない(商は2桁)
+/* ---------- LEVEL DEFINITIONS ----------
+   レベルの意図 (内部キー : 表示):
+   1 : レベル1   2桁÷1桁、あまりなし、商に0なし
+   2 : レベル2   2桁÷1桁、あまりあり、商に0なし
+   3 : レベル3   2桁÷1桁、商の一の位が0
+   4 : レベル4   3桁÷1桁、商が百の位から立つ、商に0なし
+   5 : レベル5   3桁÷1桁、商の十の位か一の位に0
+   6 : レベル6   3桁÷1桁、百の位に商が立たない(百の位を飛ばす解法)
+   7 : レベル6(0をたてる)  ↑と同条件だが百の位に0を立てて割り進める派生
+   8 : チャレンジ  レベル1〜6からミックス出題
 */
 const LEVELS = {
   1: {
@@ -1278,6 +1386,7 @@ const LEVELS = {
   6: {
     title: 'レベル 6',
     desc: '3けた÷1けた\n百の位に商が立たない',
+    badge: '6',
     fixed: [
       [234, 5], [156, 4], [378, 6], [245, 7], [128, 3],
       [186, 8], [342, 9], [275, 6], [168, 7], [189, 4]
@@ -1291,6 +1400,39 @@ const LEVELS = {
         if (firstDigit < div) return [dividend, div];
       }
     }
+  },
+  7: {
+    // レベル6の派生(0を立てるバージョン)。カードでは「6」バッジ＋サブ表記で
+    // レベル6の仲間だとわかるように見せる
+    title: 'レベル 6',
+    desc: '百の位に「0」を\nたてて すすむ',
+    badge: '6',
+    badgeSub: '0をたてる',   // バッジ下の小ラベル
+    variant: true,            // レベル6の派生であることを示す
+    leadingZero: true,        // 百の位から商0を立てて割り進める解法
+    fixed: [
+      [256, 4], [128, 3], [245, 7], [156, 4], [378, 6],
+      [186, 8], [168, 7], [275, 6], [342, 9], [234, 5]
+    ],
+    randomGen: () => {
+      // 3桁÷1桁、百の位に商が立たない(百の位 < divisor) → 百の位に0を立てる
+      while (true) {
+        const div = rand(3, 9);
+        const dividend = rand(100, 999);
+        const firstDigit = Math.floor(dividend / 100);
+        if (firstDigit < div) return [dividend, div];
+      }
+    }
+  },
+  8: {
+    // 総合チャレンジ: レベル1〜6の問題からミックス出題
+    title: 'チャレンジ',
+    desc: 'レベル1〜6\nいろいろな もんだい',
+    badge: '★',
+    isChallenge: true,
+    mixFrom: [1, 2, 3, 4, 5, 6],   // この6レベルから出題
+    fixed: null,                    // 動的生成のため未使用
+    randomGen: null
   }
 };
 
@@ -1309,16 +1451,23 @@ const state = {
 };
 
 /* ---------- STEP COMPUTATION ---------- */
-function computeSteps(dividend, divisor) {
+function computeSteps(dividend, divisor, leadingZeroMode = false) {
   const digits = String(dividend).split('').map(Number);
   const n = digits.length;
   const steps = [];
 
-  let p = 0, acc = 0, firstQuotientPosition = -1;
-  while (p < n) {
-    acc = acc * 10 + digits[p];
-    if (acc >= divisor) { firstQuotientPosition = p; break; }
-    p++;
+  let firstQuotientPosition = -1;
+  if (leadingZeroMode) {
+    // レベル7: 百の位(先頭)から商0を立てて割り進める解法
+    // 先頭桁が割れなくてもスキップせず、position 0 から商0を立てる
+    firstQuotientPosition = 0;
+  } else {
+    let p = 0, acc = 0;
+    while (p < n) {
+      acc = acc * 10 + digits[p];
+      if (acc >= divisor) { firstQuotientPosition = p; break; }
+      p++;
+    }
   }
 
   let partial = 0;
@@ -1342,13 +1491,13 @@ function computeSteps(dividend, divisor) {
     }
   }
 
-  return { steps, firstQuotientPosition, digits,
+  return { steps, firstQuotientPosition, digits, leadingZeroMode,
            finalQuotient: Math.floor(dividend / divisor),
            finalRemainder: dividend % divisor };
 }
 
-function buildPlan(dividend, divisor) {
-  const result = computeSteps(dividend, divisor);
+function buildPlan(dividend, divisor, leadingZeroMode = false) {
+  const result = computeSteps(dividend, divisor, leadingZeroMode);
   const { steps, firstQuotientPosition, digits } = result;
 
   const activeStages = [];
@@ -1431,7 +1580,9 @@ function captureDivisionSnapshot() {
     if (el) {
       snap.cells[id] = {
         text: el.textContent,
-        faded: el.classList.contains('faded')
+        faded: el.classList.contains('faded'),
+        leadZero: el.classList.contains('lead-zero'),
+        struck: el.classList.contains('struck')
       };
     }
   }
@@ -1457,6 +1608,8 @@ function applyDivisionSnapshot(snap) {
     if (el) {
       el.textContent = snap.cells[id].text;
       if (snap.cells[id].faded) el.classList.add('faded');
+      if (snap.cells[id].leadZero) el.classList.add('lead-zero');
+      if (snap.cells[id].struck) el.classList.add('struck');
     }
   }
   // subline
@@ -2032,6 +2185,13 @@ function handleNumClick(num) {
         cell.classList.add('correct-pop', 'fade-in');
         setTimeout(() => cell.classList.remove('correct-pop'), 500);
 
+        // leadingZeroモード: 商の百の位(position 0)に立てた「0」は
+        // 答えとしては不要なので薄く表示する。問題完了時に斜線で消す。
+        if (step.kind === 'tateru' && c.plan.leadingZeroMode &&
+            step.position === 0 && num === 0) {
+          cell.classList.add('faded', 'lead-zero');
+        }
+
         // hikuステップで「結果が0かつ1桁」かつ「最終ステージではない」場合、
         // その0を薄く表示する (例: 648÷2 で 6-6=0 のような場面)
         // → 後で「おろす」で右隣に数字が来ると「0X」のような不自然な表記になるのを防ぐ
@@ -2089,10 +2249,22 @@ function advanceStep() {
     if (c.errorCount <= 1) state.correctCount++;
     document.getElementById('correctDisplay').textContent = state.correctCount;
     clearIdleTimer();  // 問題完了時はタイマー不要
+    strikeLeadingZero();  // leadingZeroモード: 不要な先頭の0に斜線を引いて消す
     showRemainderTag();
     showCorrectMark();
   } else {
     updateStepHint();
+  }
+}
+
+/* leadingZeroモードの商の先頭「0」に斜線を引いて「消した」ことを示す
+   (教科書的な「いらない0は消す」表現) */
+function strikeLeadingZero() {
+  const c = state.current;
+  if (!c || !c.plan.leadingZeroMode) return;
+  const cell = document.getElementById('q-0');
+  if (cell && cell.classList.contains('lead-zero')) {
+    cell.classList.add('struck');
   }
 }
 
@@ -2117,6 +2289,9 @@ function showCorrectMark() {
   const nextBtn = document.getElementById('nextQBtn');
 
   maru.style.display = 'flex';
+
+  // 筆算に重ならないように赤丸・せいかいテキストの位置とサイズを決める
+  positionCorrectMark();
 
   // SVGラップのアニメ
   const wrap = maru.querySelector('.maru-svg-wrap');
@@ -2149,9 +2324,123 @@ function showCorrectMark() {
   nextBtn.onclick = goNextQuestion;
 }
 
+/* 正解マーク(○・せいかい！)を筆算に重ならない空きスペースに配置する。
+   筆算(#division)の領域を取得し、
+   - 「下側の空き高さ」と「右側の空き幅」を比べ、広い方の空きエリアに配置
+   - そのエリアの短辺に収まるよう赤丸のサイズを決める
+   さらに「つぎのもんだいへ」ボタンも筆算の最下端より下に来るよう調整する */
+function positionCorrectMark() {
+  const maru = document.getElementById('bigMaru');
+  const wrap = maru.querySelector('.maru-svg-wrap');
+  const panel = document.getElementById('calcPanel');
+  const division = document.getElementById('division');
+  if (!maru || !wrap || !panel || !division) return;
+
+  const pw = panel.clientWidth;
+  const ph = panel.clientHeight;
+
+  // 筆算の領域 (calcPanel内のローカル座標)
+  const divLeft   = parseFloat(division.style.left) || 0;
+  const divTop    = parseFloat(division.style.top)  || 0;
+  const divWidth  = parseFloat(division.style.width)  || division.clientWidth;
+  const divHeight = parseFloat(division.style.height) || division.clientHeight;
+  const divRight  = divLeft + divWidth;
+  const divBottom = divTop + divHeight;
+
+  const PAD = 12; // 筆算とマークの間の最小余白(px)
+
+  // 空きエリア候補: 下側 と 右側
+  const belowH = ph - divBottom;        // 筆算の下の空き高さ
+  const rightW = pw - divRight;         // 筆算の右の空き幅
+
+  // 赤丸が確保できる最大の正方形サイズを各エリアで算出
+  // 下側エリア: 幅=パネル全幅, 高さ=belowH
+  const belowSize = Math.min(pw * 0.9, Math.max(0, belowH - PAD * 2));
+  // 右側エリア: 幅=rightW, 高さ=パネル全高
+  const rightSize = Math.min(ph * 0.75, Math.max(0, rightW - PAD * 2));
+
+  // マーク本体(○+せいかい)を absolute なボックスとして配置する設定にする
+  maru.style.inset = 'auto';
+  maru.style.justifyContent = 'center';
+  maru.style.alignItems = 'center';
+
+  let boxLeft, boxTop, boxW, boxH, size;
+
+  if (belowSize >= rightSize && belowSize >= 80) {
+    // 下側に配置
+    size = belowSize;
+    boxW = pw;
+    boxH = belowH;
+    boxLeft = 0;
+    boxTop = divBottom;
+  } else if (rightSize >= 80) {
+    // 右側に配置
+    size = rightSize;
+    boxW = rightW;
+    boxH = ph;
+    boxLeft = divRight;
+    boxTop = 0;
+  } else {
+    // どちらの余白も狭い場合: パネル全体に小さめ表示(従来挙動に近いフォールバック)
+    size = Math.min(pw, ph) * 0.5;
+    boxW = pw;
+    boxH = ph;
+    boxLeft = 0;
+    boxTop = 0;
+  }
+
+  maru.style.left   = boxLeft + 'px';
+  maru.style.top    = boxTop + 'px';
+  maru.style.width  = boxW + 'px';
+  maru.style.height = boxH + 'px';
+
+  // 赤丸サイズを設定(せいかいテキストの分を少し残す)
+  const circleSize = Math.max(60, size * 0.78);
+  wrap.style.width  = circleSize + 'px';
+  wrap.style.height = circleSize + 'px';
+  wrap.style.maxWidth  = '95%';
+  wrap.style.maxHeight = '70%';
+
+  // 「つぎのもんだいへ」ボタンを筆算の最下端より下に置く
+  // (筆算が縦に長い問題で、ボタンが筆算に重なるのを防ぐ)
+  const nextBtn = document.getElementById('nextQBtn');
+  if (nextBtn) {
+    // ボタン高さ概算(レンダリング前なので一旦表示して測る)
+    const prevDisplay = nextBtn.style.display;
+    nextBtn.style.visibility = 'hidden';
+    nextBtn.style.display = 'block';
+    const btnH = nextBtn.offsetHeight || 56;
+    nextBtn.style.display = prevDisplay;
+    nextBtn.style.visibility = '';
+
+    // 筆算下端 + 余白 を基準にしつつ、パネル下端からはみ出さない位置に
+    const desiredTop = divBottom + PAD;
+    const maxTop = ph - btnH - PAD;
+    let btnTop = Math.min(desiredTop, maxTop);
+    // 下側にマークを置いた場合は、マークとボタンが重ならないよう最下部へ寄せる
+    if (boxTop === divBottom && boxLeft === 0) {
+      btnTop = ph - btnH - PAD;
+    }
+    if (btnTop < PAD) btnTop = PAD;
+    nextBtn.style.bottom = 'auto';
+    nextBtn.style.top = btnTop + 'px';
+  }
+}
+
 function goNextQuestion() {
-  document.getElementById('bigMaru').style.display = 'none';
-  document.getElementById('nextQBtn').classList.remove('show');
+  const maru = document.getElementById('bigMaru');
+  const nextBtn = document.getElementById('nextQBtn');
+  maru.style.display = 'none';
+  nextBtn.classList.remove('show');
+  // 次回の正解時に positionCorrectMark で再計算できるよう、
+  // 動的に設定したインラインスタイルをクリアしておく
+  maru.style.left = '';
+  maru.style.top = '';
+  maru.style.width = '';
+  maru.style.height = '';
+  maru.style.inset = '';
+  nextBtn.style.top = '';
+  nextBtn.style.bottom = '';
 
   state.qIdx++;
   if (state.qIdx >= state.questions.length) {
@@ -2170,11 +2459,17 @@ function enableNumpad(on) {
 
 /* ---------- LOAD QUESTION ---------- */
 function loadQuestion() {
-  const [dividend, divisor] = state.questions[state.qIdx];
-  const plan = buildPlan(dividend, divisor);
+  const q = state.questions[state.qIdx];
+  const dividend = q[0], divisor = q[1];
+  // 出題元レベル(チャレンジ時は問題ごとに異なる)。未指定なら現在のレベル
+  const srcLv = (q[2] !== undefined) ? q[2] : state.level;
+  state.currentSrcLevel = srcLv;
+  const leadingZero = !!(LEVELS[srcLv] && LEVELS[srcLv].leadingZero);
+  const plan = buildPlan(dividend, divisor, leadingZero);
   state.current = {
     dividend, divisor, plan,
     digits: plan.digits, n: plan.n,
+    srcLv,
     stepIdx: 0, stepConfirmed: false, inputBuffer: [],
     errorCount: 0, completed: false,
     hintRequested: false  // 4〜5問目で「ヒントを見せて」と要求されたか
@@ -2267,21 +2562,79 @@ function shuffleStepButtons(shouldShuffle) {
 /* ---------- BUILD QUESTION SET ---------- */
 function buildQuestionSet() {
   const lvl = LEVELS[state.level];
+
+  // ----- チャレンジレベル: レベル1〜6からミックス出題 -----
+  if (lvl.isChallenge) {
+    buildChallengeSet(lvl);
+    state.qIdx = 0;
+    state.correctCount = 0;
+    document.getElementById('correctDisplay').textContent = 0;
+    document.getElementById('levelDisplay').textContent = lvl.badge || '★';
+    return;
+  }
+
   if (state.mode === 'fixed') {
-    state.questions = lvl.fixed.slice(0, QUESTIONS_PER_LEVEL);
+    // [dividend, divisor] に出題元レベル(=自分)を付けて [d, v, srcLv] 形式に統一
+    state.questions = lvl.fixed.slice(0, QUESTIONS_PER_LEVEL)
+      .map(q => [q[0], q[1], state.level]);
   } else {
     state.questions = [];
     const seen = new Set();
     while (state.questions.length < QUESTIONS_PER_LEVEL) {
       const q = lvl.randomGen();
       const key = q.join(',');
-      if (!seen.has(key)) { seen.add(key); state.questions.push(q); }
+      if (!seen.has(key)) { seen.add(key); state.questions.push([q[0], q[1], state.level]); }
     }
   }
   state.qIdx = 0;
   state.correctCount = 0;
   document.getElementById('correctDisplay').textContent = 0;
-  document.getElementById('levelDisplay').textContent = state.level;
+  document.getElementById('levelDisplay').textContent = lvl.badge || state.level;
+}
+
+/* チャレンジ用: レベル1〜6から各レベルの問題をミックスして出題セットを作る
+   各問題に出題元レベル(srcLv)を付与し、loadQuestionが解法(leadingZero等)を切り替えられるようにする
+   - 固定モード: 各出題元レベルから問題を均等に拾い、シャッフルして QUESTIONS_PER_LEVEL 問に
+   - ランダムモード: 出題元レベルをランダムに選んでそのレベルのrandomGenで生成 */
+function buildChallengeSet(lvl) {
+  const sources = lvl.mixFrom;   // [1..6]
+  state.questions = [];
+  const seen = new Set();
+
+  if (state.mode === 'fixed') {
+    // 各レベルの固定問題プールを集めて [d, v, srcLv] のリストにする
+    const pool = [];
+    for (const lv of sources) {
+      for (const q of LEVELS[lv].fixed) {
+        pool.push([q[0], q[1], lv]);
+      }
+    }
+    // シャッフル(Fisher-Yates)
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    // できるだけ出題元レベルが重複しすぎないように、先頭から重複なしで拾う
+    for (const item of pool) {
+      const key = item[0] + ',' + item[1] + ',' + item[2];
+      if (seen.has(key)) continue;
+      seen.add(key);
+      state.questions.push(item);
+      if (state.questions.length >= QUESTIONS_PER_LEVEL) break;
+    }
+  } else {
+    // ランダム: 出題元レベルをランダムに選び、そのレベルのrandomGenで生成
+    let guard = 0;
+    while (state.questions.length < QUESTIONS_PER_LEVEL && guard < 500) {
+      guard++;
+      const lv = sources[Math.floor(Math.random() * sources.length)];
+      const q = LEVELS[lv].randomGen();
+      const key = q[0] + ',' + q[1] + ',' + lv;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      state.questions.push([q[0], q[1], lv]);
+    }
+  }
 }
 
 /* ---------- SCREEN MANAGEMENT ---------- */
@@ -2294,13 +2647,21 @@ function showScreen(id) {
 function setupTitleScreen() {
   const grid = document.getElementById('levelGrid');
   grid.innerHTML = '';
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 8; i++) {
     const lvl = LEVELS[i];
     const card = document.createElement('button');
     card.className = 'level-card';
+    if (lvl.variant) card.classList.add('variant');
+    if (lvl.isChallenge) card.classList.add('challenge');
     card.dataset.level = i;
+
+    // バッジ(番号 or ★)。派生レベルは番号下に小ラベルを出す
+    const badge = lvl.badge || String(i);
+    const topLabel = lvl.isChallenge ? 'CHALLENGE' : 'LEVEL';
+    const subBadge = lvl.badgeSub ? `<span class="lv-sub">${lvl.badgeSub}</span>` : '';
+
     card.innerHTML = `
-      <div class="lv-num"><small>LEVEL</small>${i}</div>
+      <div class="lv-num"><small>${topLabel}</small>${badge}${subBadge}</div>
       <div class="lv-title">${lvl.title}</div>
       <div class="lv-desc">${lvl.desc.replace('\n', '<br>')}</div>
     `;
@@ -2482,10 +2843,36 @@ function setupMainScreen() {
   document.querySelectorAll('.num-btn').forEach(btn => {
     btn.onclick = () => handleNumClick(parseInt(btn.dataset.num, 10));
   });
+  document.getElementById('skipBtn').onclick = () => {
+    if (!state.current) return;
+    // 正解マーク表示中(完了済み)は「つぎへ」ボタンを使うのでスキップ無効
+    if (state.current.completed) return;
+    // スキップした問題は不正解扱い(正解カウントしない)で次の問題へ
+    clearIdleTimer();
+    const maru = document.getElementById('bigMaru');
+    const nextBtn = document.getElementById('nextQBtn');
+    maru.style.display = 'none';
+    nextBtn.classList.remove('show');
+    maru.style.left = ''; maru.style.top = '';
+    maru.style.width = ''; maru.style.height = ''; maru.style.inset = '';
+    nextBtn.style.top = ''; nextBtn.style.bottom = '';
+
+    state.qIdx++;
+    if (state.qIdx >= state.questions.length) {
+      showResults();
+    } else {
+      loadQuestion();
+    }
+  };
   document.getElementById('backBtn').onclick = () => {
     if (confirm('タイトルへ もどりますか？ いまの もんだいは リセットされます。')) {
-      document.getElementById('bigMaru').style.display = 'none';
-      document.getElementById('nextQBtn').classList.remove('show');
+      const maru = document.getElementById('bigMaru');
+      const nextBtn = document.getElementById('nextQBtn');
+      maru.style.display = 'none';
+      nextBtn.classList.remove('show');
+      maru.style.left = ''; maru.style.top = '';
+      maru.style.width = ''; maru.style.height = ''; maru.style.inset = '';
+      nextBtn.style.top = ''; nextBtn.style.bottom = '';
       clearIdleTimer();
       showScreen('titleScreen');
     }
@@ -2510,7 +2897,10 @@ function handleResize() {
   const mainActive = document.getElementById('mainScreen').classList.contains('active');
   if (!mainActive) return;
   if (state.current.completed) {
-    // 正解表示中は再描画しない（赤丸表示中のレイアウト崩れを避ける）
+    // 正解表示中は筆算は再描画しないが、マークの位置は画面サイズに合わせて再計算する
+    if (document.getElementById('bigMaru').style.display === 'flex') {
+      positionCorrectMark();
+    }
     return;
   }
   // スナップショット → 再描画 → 復元
