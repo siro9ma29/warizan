@@ -844,6 +844,71 @@
     font-family: var(--font-display); font-weight: 900;
   }
 
+  /* ============ CHALLENGE METHOD MODAL ============ */
+  .method-modal { max-width: 640px; text-align: center; }
+  .method-q {
+    font-family: var(--font-hand);
+    font-size: clamp(1rem, 2.2vh, 1.3rem);
+    color: var(--ink); line-height: 1.7;
+    margin-bottom: 2vh;
+  }
+  .method-example {
+    display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: center;
+    gap: 0.6em;
+    font-family: var(--font-hand);
+    font-size: clamp(0.8rem, 1.6vh, 1rem);
+    background: white;
+    border: 2px dashed var(--line);
+    border-radius: 1vw;
+    padding: 1.4vh 2vw;
+    margin-bottom: 2.5vh;
+  }
+  .method-example-label {
+    background: var(--accent); color: white;
+    font-family: var(--font-display); font-weight: 900;
+    border-radius: 999px; padding: 0.2em 0.8em;
+    font-size: 0.85em;
+  }
+  .method-example-yes { color: var(--purple); font-weight: 700; }
+  .method-example-no  { color: var(--blue);   font-weight: 700; }
+  .method-example-vs  { color: var(--ink-soft); }
+  .method-btn-row {
+    display: flex; gap: 3vw;
+    align-items: stretch; justify-content: center;
+  }
+  .method-btn {
+    flex: 1; max-width: 220px;
+    background: white; border: 3px solid var(--line);
+    border-radius: 1.4vw; padding: 2.4vh 1vw;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0.6vh;
+    box-shadow: 0 5px 0 var(--line);
+    transition: all 0.15s;
+    font-family: var(--font-display);
+  }
+  .method-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--line); }
+  .method-btn .method-btn-icon { font-size: clamp(1.8rem, 4vh, 2.6rem); line-height: 1; }
+  .method-btn .method-btn-label {
+    font-weight: 900; font-size: clamp(1.1rem, 2.4vh, 1.5rem);
+    letter-spacing: 0.08em;
+  }
+  .method-btn .method-btn-sub {
+    font-family: var(--font-hand);
+    font-size: clamp(0.7rem, 1.4vh, 0.9rem);
+    color: var(--ink-soft);
+  }
+  .method-btn.yes { color: var(--purple); }
+  .method-btn.yes:hover { border-color: var(--purple); box-shadow: 0 5px 0 var(--purple); background: #f3eff8; }
+  .method-btn.no { color: var(--blue); }
+  .method-btn.no:hover { border-color: var(--blue); box-shadow: 0 5px 0 var(--blue); background: #eef5fb; }
+
+  @media (max-width: 599px) {
+    .method-modal { max-width: 94vw; }
+    .method-btn-row { gap: 4vw; }
+    .method-btn { padding: 2vh 2vw; border-radius: 3vw; }
+  }
+
   /* ============ RESULT SCREEN ============ */
   #resultScreen {
     flex-direction: column;
@@ -922,25 +987,44 @@
   /* ============ スマホ縦長対応 ============ */
   @media (max-width: 599px) {
 
-    /* タイトル画面 */
+    /* タイトル画面: 中央寄せをやめ、上から並べてスクロールできるようにする
+       (コンテンツが画面より高いと中央寄せでは上端が切れてしまうため) */
     #titleScreen {
-      padding: 2vh 4vw;
-      gap: 2vh;
+      justify-content: flex-start;
+      padding: 2.5vh 4vw calc(2.5vh + env(safe-area-inset-bottom, 0px));
+      gap: 1.6vh;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
-    .app-title { font-size: clamp(1.5rem, 7vw, 2.2rem); }
+    .title-header { flex-shrink: 0; }
+    .app-title {
+      font-size: clamp(1.3rem, 6.5vw, 2rem);
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
     .app-title::before, .app-title::after { display: none; }
-    .app-subtitle { font-size: 0.85rem; }
+    .app-subtitle { font-size: 0.8rem; margin-top: 0.2em; }
+    .section-label { font-size: 0.9rem; margin-bottom: 0.6vh; }
     .level-grid {
       grid-template-columns: 1fr 1fr;
       gap: 2vw; width: 96vw;
     }
-    .level-card { min-height: 14vh; padding: 1.5vh 1vw; }
-    .level-card .lv-num { font-size: clamp(1.4rem, 6vw, 2rem); }
-    .level-card .lv-desc { font-size: 0.7rem; }
+    /* カードは内容に合わせた高さにして、縦の間延びを防ぐ */
+    .level-card {
+      min-height: 0; padding: 1.2vh 1.5vw;
+      border-radius: 3vw; gap: 0.3vh;
+    }
+    .level-card .lv-num { font-size: clamp(1.3rem, 5.5vw, 1.8rem); }
+    .level-card .lv-num small { font-size: 0.4em; margin-bottom: 0.15em; }
+    .level-card .lv-num .lv-sub { font-size: 0.3em; padding: 0.2em 0.5em; margin-top: 0.25em; }
+    .level-card .lv-title { font-size: clamp(0.8rem, 3.5vw, 0.95rem); }
+    .level-card .lv-desc { font-size: 0.68rem; line-height: 1.3; }
     .mode-row { gap: 3vw; }
-    .mode-btn { padding: 1.4vh 4vw; font-size: 0.9rem; }
-    .start-btn { font-size: 1.1rem; padding: 1.6vh 8vw; }
+    .mode-btn { padding: 1.2vh 4vw; font-size: 0.85rem; }
+    .start-btn {
+      font-size: 1.1rem; padding: 1.4vh 8vw;
+      flex-shrink: 0;
+    }
 
     /* メイン画面: 縦積みに変更 */
     #mainScreen {
@@ -1253,6 +1337,36 @@
 </div>
 
 
+<!-- ============ CHALLENGE METHOD MODAL (チャレンジの解法えらび) ============ -->
+<div class="modal-overlay" id="methodModal">
+  <div class="modal method-modal">
+    <div class="modal-title"><span class="deco">★</span> といかた を えらぼう <span class="deco">★</span></div>
+    <p class="method-q">
+      「ひゃくのくらい」に しょうが たたない もんだいでは、<br>
+      ひゃくのくらいに「0」を たてて といていますか？
+    </p>
+    <div class="method-example">
+      <span class="method-example-label">れい</span>
+      <span class="method-example-yes">０２３ → 234 ÷ 5 …「0」をたてる</span>
+      <span class="method-example-vs">／</span>
+      <span class="method-example-no">_23 → 234 ÷ 5 …とばす</span>
+    </div>
+    <div class="method-btn-row">
+      <button class="method-btn yes" id="methodYesBtn">
+        <span class="method-btn-icon">⭕</span>
+        <span class="method-btn-label">はい</span>
+        <span class="method-btn-sub">0をたてる</span>
+      </button>
+      <button class="method-btn no" id="methodNoBtn">
+        <span class="method-btn-icon">➡️</span>
+        <span class="method-btn-label">いいえ</span>
+        <span class="method-btn-sub">とばす</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
 <script>
 /* ============================================================
    わりざんのひっ算アプリ - 改修版
@@ -1447,7 +1561,8 @@ const state = {
   questions: [],
   qIdx: 0,
   correctCount: 0,
-  current: null
+  current: null,
+  challengeLeadingZero: false  // チャレンジ: レベル6相当を「0をたてる」解法で出すか
 };
 
 /* ---------- STEP COMPUTATION ---------- */
@@ -2464,7 +2579,13 @@ function loadQuestion() {
   // 出題元レベル(チャレンジ時は問題ごとに異なる)。未指定なら現在のレベル
   const srcLv = (q[2] !== undefined) ? q[2] : state.level;
   state.currentSrcLevel = srcLv;
-  const leadingZero = !!(LEVELS[srcLv] && LEVELS[srcLv].leadingZero);
+  let leadingZero = !!(LEVELS[srcLv] && LEVELS[srcLv].leadingZero);
+  // チャレンジモードでレベル6相当(百の位に商が立たない)の問題は、
+  // タイトル画面で選んだ解法(challengeLeadingZero)に従って切り替える
+  const inChallenge = !!(LEVELS[state.level] && LEVELS[state.level].isChallenge);
+  if (inChallenge && (srcLv === 6 || srcLv === 7)) {
+    leadingZero = state.challengeLeadingZero;
+  }
   const plan = buildPlan(dividend, divisor, leadingZero);
   state.current = {
     dividend, divisor, plan,
@@ -2670,6 +2791,10 @@ function setupTitleScreen() {
       card.classList.add('selected');
       state.level = i;
       updateStartBtn();
+      // チャレンジを選んだら、レベル6相当の解法をたずねるモーダルを出す
+      if (lvl.isChallenge) {
+        openMethodModal();
+      }
     };
     grid.appendChild(card);
   }
@@ -2721,6 +2846,26 @@ function buildKukuTable() {
       tbl.appendChild(cell);
     }
   }
+}
+
+/* ---------- CHALLENGE METHOD MODAL (チャレンジの解法えらび) ---------- */
+function openMethodModal() {
+  const modal = document.getElementById('methodModal');
+  if (modal) modal.classList.add('active');
+}
+function setupMethodModal() {
+  const modal = document.getElementById('methodModal');
+  const yesBtn = document.getElementById('methodYesBtn');
+  const noBtn = document.getElementById('methodNoBtn');
+  if (!modal || !yesBtn || !noBtn) return;
+  yesBtn.onclick = () => {
+    state.challengeLeadingZero = true;   // 百の位に「0」をたてる解法
+    modal.classList.remove('active');
+  };
+  noBtn.onclick = () => {
+    state.challengeLeadingZero = false;  // 百の位をとばす解法
+    modal.classList.remove('active');
+  };
 }
 
 /* ---------- HINT MODAL ---------- */
@@ -2932,6 +3077,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setupResultScreen();
   buildKukuTable();
   setupHintModal();
+  setupMethodModal();
 });
 </script>
 </body>
