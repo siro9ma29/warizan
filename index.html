@@ -352,7 +352,9 @@
   .main-body {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* 左(ひっ算)を広く、右(操作)はコンパクトに固定上限を設ける。
+       右ブロックが大きくなりすぎてひっ算が狭くなるのを防ぐ */
+    grid-template-columns: minmax(0, 1fr) clamp(300px, 34vw, 460px);
     gap: 2vw;
     min-height: 0;
   }
@@ -731,9 +733,11 @@
     flex: 1;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    /* 行の高さに上限を設け、縦に間延びさせない */
+    grid-template-rows: repeat(2, minmax(0, 15vh));
     gap: 0.8vw;
     min-height: 0;
+    align-content: center;
   }
   .num-btn {
     background: white; border: 3px solid var(--line);
@@ -979,9 +983,28 @@
     100% { transform: translateY(110vh) rotate(720deg); }
   }
 
-  @media (max-width: 900px) {
-    .main-body { grid-template-columns: 1fr; }
+  /* 中間サイズ(タブレット等): 横向きは横並びのまま操作ブロックを少し狭める。
+     縦向きのときだけ縦積みにする(横幅が足りないため) */
+  @media (max-width: 1100px) and (orientation: landscape) {
+    .main-body {
+      grid-template-columns: minmax(0, 1fr) clamp(260px, 30vw, 380px);
+      gap: 1.5vw;
+    }
+  }
+  @media (max-width: 900px) and (orientation: portrait) {
+    .main-body {
+      grid-template-columns: 1fr;
+      display: flex;
+      flex-direction: column;
+    }
     .level-grid { grid-template-columns: repeat(3, 1fr); }
+    /* ひっ算を上部にしっかり確保し、操作ブロックは下に。
+       ひっ算が潰れて文字が小さくなるのを防ぐ */
+    .calc-panel { flex: 0 0 46vh; min-height: 46vh; }
+    .controls { flex: 1 1 auto; }
+  }
+  @media (max-width: 900px) and (orientation: landscape) {
+    .level-grid { grid-template-columns: repeat(4, 1fr); }
   }
 
   /* ============ スマホ縦長対応 ============ */
@@ -1047,10 +1070,10 @@
       gap: 1vh;
     }
 
-    /* ひっ算エリアは上部に固定高さ */
+    /* ひっ算エリアは上部に固定高さ。見やすさのため少し広げる */
     .calc-panel {
-      flex: 0 0 38vh;
-      min-height: 38vh;
+      flex: 0 0 44vh;
+      min-height: 44vh;
       border-radius: 3vw;
     }
 
@@ -1666,10 +1689,23 @@ function getCellSize() {
   const panel = document.getElementById('calcPanel');
   const w = panel.clientWidth  || window.innerWidth  * 0.45;
   const h = panel.clientHeight || window.innerHeight * 0.4;
-  // 問題の最大行数(3桁問題=8行)と列数(4列)を基準に、マスが収まる最大サイズを算出
-  const candH = Math.floor(h / 8.5);   // 縦: 余白込みで8.5行分
-  const candW = Math.floor(w / 5.5);   // 横: 余白込みで5.5列分 (div+わる数)
-  return Math.max(32, Math.min(candH, candW, 90));
+
+  // 実際の問題の行数・列数に合わせてマスを最大化する。
+  // (2桁問題は3桁問題より行・列が少ないので、その分マスを大きくできる)
+  let rows = 8;   // フォールバック(3桁・2ステージ想定)
+  let cols = 5;   // フォールバック(わる数 + 3桁 + 余白)
+  const c = state.current;
+  if (c && c.plan) {
+    const n = c.n;
+    const stages = c.plan.activeStages.length;
+    rows = 2 + stages * 2;   // 商行 + わられる数行 + 各ステージ2行
+    cols = n + 1;            // わる数1列 + わられる数n列
+  }
+  // 余白ぶんを少し足してから割る (縦は上下、横は左右＋あまりタグ用)
+  const candH = Math.floor(h / (rows + 1.2));
+  const candW = Math.floor(w / (cols + 1.5));
+  // タブレット/PCでは大きめのマスを許容 (上限を引き上げ)
+  return Math.max(34, Math.min(candH, candW, 130));
 }
 
 /* ---------- DOMスナップショット & 復元 ----------
