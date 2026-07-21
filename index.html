@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>わりざんのひっ算れんしゅう</title>
+<title>わりざんのひっ算れんしゅうⅡ 〜2けたでわる〜</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=Zen+Maru+Gothic:wght@500;700;900&family=Klee+One:wght@600&display=swap');
 
-  /* ============ DESIGN TOKENS ============ */
   :root {
     --paper:       #fbf8f0;
     --paper-2:     #f5f0e1;
     --ink:         #2c3a4a;
     --ink-soft:    #5a6878;
-    --grid:        #9dd4dc;       /* 方眼の線（少し濃いめのターコイズ） */
+    --grid:        #9dd4dc;
     --grid-soft:   #cfeaee;
     --line:        #c8d2dc;
     --accent:      #f08a3e;
@@ -22,7 +21,8 @@
     --blue:        #4a90c8;
     --purple:      #8a6fb0;
     --yellow:      #f5c842;
-    --maru-red:    #e63946;       /* 正解の赤丸 */
+    --maru-red:    #e63946;
+    --mask:        #4a5568;      /* 指隠しのマスク色 */
     --shadow:      rgba(44, 58, 74, 0.12);
     --shadow-deep: rgba(44, 58, 74, 0.25);
 
@@ -30,8 +30,7 @@
     --font-hand:    'Klee One', 'Zen Maru Gothic', cursive;
     --font-ui:      'Kosugi Maru', sans-serif;
 
-    /* 方眼の1マスのサイズ（JSで動的に上書き） */
-    --cell: 64px;
+    --cell: 58px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -51,39 +50,51 @@
   }
   button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
 
-  /* ============ SCREENS ============ */
   .screen { position: fixed; inset: 0; display: none; }
   .screen.active { display: flex; }
 
   /* ============ TITLE SCREEN ============ */
   #titleScreen {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3vh 4vw;
-    gap: 2.5vh;
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 3vh 4vw; gap: 2.5vh;
   }
   .title-header { text-align: center; position: relative; }
-  .title-header::before {
-    content: "✏️"; position: absolute; left: -3em; top: 0.3em;
-    font-size: 0.5em; transform: rotate(-15deg);
-  }
-  .title-header::after {
-    content: "📐"; position: absolute; right: -3em; top: 0.3em;
-    font-size: 0.5em; transform: rotate(15deg);
-  }
   .app-title {
     font-family: var(--font-display); font-weight: 900;
-    font-size: clamp(2.2rem, 5vw, 3.4rem);
-    color: var(--ink); letter-spacing: 0.08em;
+    font-size: clamp(1.9rem, 4.5vw, 3rem);
+    color: var(--ink); letter-spacing: 0.06em;
   }
   .app-title .accent { color: var(--accent); }
+  .app-title .badge2 {
+    display: inline-block; background: var(--purple); color: white;
+    font-size: 0.5em; border-radius: 999px; padding: 0.15em 0.7em;
+    vertical-align: middle; margin-left: 0.3em; letter-spacing: 0.05em;
+  }
   .app-subtitle {
     font-family: var(--font-hand);
     font-size: clamp(0.95rem, 1.5vw, 1.2rem);
-    color: var(--ink-soft); margin-top: 0.4em;
+    color: var(--ink-soft); margin-top: 0.5em;
   }
-
+  .version-badge {
+    display: inline-flex; align-items: center; gap: 0.35em;
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(0.62rem, 1vw, 0.78rem);
+    color: var(--ink-soft); background: white;
+    border: 1.5px solid var(--line); border-radius: 999px;
+    padding: 0.25em 0.85em; margin-top: 1.2vh;
+    box-shadow: 0 2px 0 var(--line); letter-spacing: 0.04em;
+  }
+  .version-badge .dot {
+    width: 0.5em; height: 0.5em; border-radius: 50%;
+    background: var(--green); display: inline-block;
+  }
+  .version-badge .vnum { color: var(--accent); font-weight: 900; }
+  /* メイン画面のミニ版バッヂ */
+  .pill.version-pill {
+    font-size: clamp(0.7rem, 0.95vw, 0.85rem);
+    color: var(--ink-soft); border-style: dashed;
+  }
+  .pill.version-pill .vnum { color: var(--accent); font-weight: 900; }
   .section-label {
     font-family: var(--font-display); font-weight: 700;
     font-size: clamp(0.95rem, 1.4vw, 1.15rem);
@@ -93,100 +104,60 @@
   .section-label .deco { color: var(--accent); }
 
   .level-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 1vw;
-    width: 94vw;
-    max-width: 1200px;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1.2vw; width: 82vw; max-width: 900px;
   }
   .level-card {
     background: white; border: 2px solid var(--line);
-    border-radius: 1.2vw; padding: 1.8vh 0.6vw;
+    border-radius: 1.2vw; padding: 2vh 0.8vw;
     text-align: center; transition: all 0.2s ease;
     box-shadow: 0 4px 0 var(--line);
-    min-height: 18vh;
+    min-height: 17vh;
     display: flex; flex-direction: column; justify-content: center; gap: 0.6vh;
   }
   .level-card:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--line); }
   .level-card.selected {
-    border-color: var(--accent);
-    box-shadow: 0 4px 0 var(--accent);
-    background: #fff8ef;
+    border-color: var(--accent); box-shadow: 0 4px 0 var(--accent); background: #fff8ef;
   }
   .level-card .lv-num {
     font-family: var(--font-display); font-weight: 900;
     font-size: clamp(1.6rem, 2.6vw, 2.3rem);
     color: var(--accent); line-height: 1;
-    position: relative;
   }
   .level-card .lv-num small {
     font-size: 0.42em; color: var(--ink-soft);
-    display: block; font-weight: 700; margin-bottom: 0.3em;
-    letter-spacing: 0.05em;
-  }
-  /* 派生レベルの小ラベル (例: 0をたてる) */
-  .level-card .lv-num .lv-sub {
-    display: block;
-    font-family: var(--font-display);
-    font-size: 0.32em; font-weight: 700;
-    color: white; background: var(--purple);
-    border-radius: 999px;
-    padding: 0.25em 0.6em;
-    margin: 0.4em auto 0;
-    width: fit-content;
-    letter-spacing: 0.02em;
-    line-height: 1.2;
+    display: block; font-weight: 700; margin-bottom: 0.3em; letter-spacing: 0.05em;
   }
   .level-card .lv-title {
     font-family: var(--font-display); font-weight: 700;
-    font-size: clamp(0.78rem, 1.05vw, 0.95rem); color: var(--ink);
+    font-size: clamp(0.82rem, 1.1vw, 1rem); color: var(--ink);
   }
   .level-card .lv-desc {
     font-family: var(--font-hand);
-    font-size: clamp(0.65rem, 0.9vw, 0.8rem);
+    font-size: clamp(0.68rem, 0.92vw, 0.82rem);
     color: var(--ink-soft); line-height: 1.4;
   }
-
-  /* レベル6の派生(0をたてる)カード: 紫アクセントで「6の仲間」感を出す */
-  .level-card.variant .lv-num { color: var(--purple); }
-  .level-card.variant.selected {
-    border-color: var(--purple);
-    box-shadow: 0 4px 0 var(--purple);
-    background: #f3eff8;
-  }
-  /* チャレンジカード: 金色アクセントで特別感を出す */
   .level-card.challenge .lv-num { color: #e0a020; }
   .level-card.challenge {
     background: linear-gradient(160deg, #fffdf5, #fff6e0);
-    border-color: var(--yellow);
-    box-shadow: 0 4px 0 var(--yellow);
+    border-color: var(--yellow); box-shadow: 0 4px 0 var(--yellow);
   }
   .level-card.challenge.selected {
-    border-color: #e0a020;
-    box-shadow: 0 4px 0 #e0a020;
+    border-color: #e0a020; box-shadow: 0 4px 0 #e0a020;
     background: linear-gradient(160deg, #fffaf0, #ffeec0);
   }
 
-  .mode-row {
-    display: flex; gap: 2vw;
-    align-items: center; justify-content: center;
-  }
+  .mode-row { display: flex; gap: 2vw; align-items: center; justify-content: center; }
   .mode-btn {
     background: white; border: 2px solid var(--line);
     border-radius: 1vw; padding: 1.6vh 2.5vw;
     font-family: var(--font-display); font-weight: 700;
     font-size: clamp(1rem, 1.4vw, 1.2rem);
-    color: var(--ink);
-    box-shadow: 0 3px 0 var(--line);
-    transition: all 0.15s;
-    display: flex; align-items: center; gap: 0.6em;
+    color: var(--ink); box-shadow: 0 3px 0 var(--line);
+    transition: all 0.15s; display: flex; align-items: center; gap: 0.6em;
   }
   .mode-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
-  .mode-btn.selected {
-    border-color: var(--blue);
-    box-shadow: 0 3px 0 var(--blue);
-    background: #eef5fb;
-  }
+  .mode-btn.selected { border-color: var(--blue); box-shadow: 0 3px 0 var(--blue); background: #eef5fb; }
   .mode-btn .icon { font-size: 1.4em; }
 
   .start-btn {
@@ -198,509 +169,310 @@
     transition: all 0.15s; letter-spacing: 0.1em;
   }
   .start-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c46d2c; }
-  .start-btn:disabled {
-    background: #c8d2dc; box-shadow: 0 5px 0 #a8b2bc; cursor: not-allowed;
-  }
+  .start-btn:disabled { background: #c8d2dc; box-shadow: 0 5px 0 #a8b2bc; cursor: not-allowed; }
 
   /* ============ MAIN SCREEN ============ */
-  #mainScreen {
-    flex-direction: column;
-    padding: 1.5vh 2vw;
-    gap: 1vh;
-  }
-  .top-bar {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 1vw; flex-shrink: 0;
-  }
+  #mainScreen { flex-direction: column; padding: 1.5vh 2vw; gap: 1vh; }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 0 1vw; flex-shrink: 0; }
   .top-bar .left, .top-bar .right { display: flex; gap: 1vw; align-items: center; }
   .pill {
-    background: white; border: 2px solid var(--line);
-    border-radius: 999px; padding: 0.6vh 1.2vw;
-    font-family: var(--font-display); font-weight: 700;
-    font-size: clamp(0.85rem, 1.1vw, 1rem);
-    color: var(--ink); display: flex; align-items: center; gap: 0.5em;
+    background: white; border: 2px solid var(--line); border-radius: 999px;
+    padding: 0.6vh 1.2vw; font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(0.85rem, 1.1vw, 1rem); color: var(--ink);
+    display: flex; align-items: center; gap: 0.5em;
   }
   .pill .num { color: var(--accent); font-weight: 900; }
   .icon-btn {
-    background: white; border: 2px solid var(--line);
-    border-radius: 50%;
+    background: white; border: 2px solid var(--line); border-radius: 50%;
     width: clamp(40px, 5vh, 56px); height: clamp(40px, 5vh, 56px);
     font-size: clamp(1.1rem, 1.6vw, 1.4rem);
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 3px 0 var(--line); transition: all 0.1s;
   }
   .icon-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
-  /* ============ ヒントボタン (計算スペース右上) ============ */
-  .hint-btn-container {
-    position: absolute;
-    top: 1.5vh;
-    right: 1.5vh;
-    z-index: 6;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3vh;
-    background: white;
-    border: 3px solid var(--yellow);
-    border-radius: 1.2vw;
-    padding: 1vh 1.4vw;
-    box-shadow: 0 4px 0 var(--yellow), 0 6px 16px rgba(245, 200, 66, 0.25);
-    cursor: pointer;
-    font-family: var(--font-display);
-    transition: all 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    /* 「ここにあるよ」と存在感を出すため、常時ふんわり光る */
-    animation: hintIdleGlow 2.5s ease-in-out infinite;
-  }
-  .hint-btn-container:hover {
-    transform: translateY(-2px);
-  }
-  .hint-btn-container:active,
-  .hint-btn-container.pressing {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 var(--yellow);
-  }
-  .hint-btn-icon {
-    font-size: clamp(1.4rem, 3vh, 2rem);
-    line-height: 1;
-  }
-  .hint-btn-label {
-    font-size: clamp(0.7rem, 1.2vh, 0.9rem);
-    font-weight: 700;
-    color: #b8860b;
-    letter-spacing: 0.08em;
-  }
-  /* デフォルトの「ふんわり光る」アニメ */
-  @keyframes hintIdleGlow {
-    0%, 100% {
-      box-shadow: 0 4px 0 var(--yellow), 0 6px 16px rgba(245, 200, 66, 0.25);
-    }
-    50% {
-      box-shadow: 0 4px 0 var(--yellow), 0 6px 24px rgba(245, 200, 66, 0.55);
-    }
-  }
-  /* 計算ヒント有効中の active 状態 */
-  .hint-btn-container.active {
-    background: var(--green);
-    border-color: var(--green);
-    box-shadow: 0 4px 0 #468055, 0 6px 16px rgba(90, 159, 107, 0.3);
-    animation: none;
-  }
-  .hint-btn-container.active .hint-btn-label {
-    color: white;
-  }
-  .hint-btn-container.active .hint-btn-icon {
-    filter: brightness(1.3);
-  }
-  /* 「ここを押して」と気づかせる強い点滅 */
-  .hint-btn-container.attention {
-    animation: hintAttention 0.9s ease-in-out infinite;
-    border-color: var(--green);
-  }
-  @keyframes hintAttention {
-    0%, 100% {
-      transform: scale(1);
-      box-shadow: 0 4px 0 var(--green), 0 0 0 0 rgba(90, 159, 107, 0.7);
-    }
-    50% {
-      transform: scale(1.15);
-      box-shadow: 0 4px 0 var(--green), 0 0 0 16px rgba(90, 159, 107, 0);
-    }
-  }
-  /* 長押し中の青いリング */
-  .hint-btn-container.pressing::after {
-    content: "";
-    position: absolute;
-    inset: -6px;
-    border-radius: 1.5vw;
-    border: 3px solid var(--blue);
-    opacity: 0.7;
-    pointer-events: none;
-    animation: longPressRing 0.5s linear forwards;
-  }
-  @keyframes longPressRing {
-    0%   { transform: scale(0.85); opacity: 0.4; }
-    100% { transform: scale(1.25); opacity: 0; }
-  }
-
-  /* ============ スキップボタン (控えめ・ヒントボタンの左隣) ============ */
-  .skip-btn {
-    position: absolute;
-    top: 1.5vh;
-    /* ヒントボタン(右1.5vh)の左隣に置く。ヒントボタン幅+余白ぶん右から離す */
-    right: calc(1.5vh + 90px);
-    z-index: 6;
-    background: rgba(255, 255, 255, 0.75);
-    border: 1.5px solid var(--line);
-    border-radius: 999px;
-    padding: 0.6vh 1.1vw;
-    font-family: var(--font-ui);
-    font-size: clamp(0.7rem, 1.1vh, 0.85rem);
-    color: var(--ink-soft);
-    box-shadow: 0 2px 0 var(--line);
-    opacity: 0.55;
-    transition: all 0.15s;
-    letter-spacing: 0.03em;
-  }
-  .skip-btn:hover { opacity: 0.95; }
-  .skip-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--line);
-    opacity: 1;
-  }
 
   .main-body {
-    flex: 1;
-    display: grid;
-    /* 左(ひっ算)を広く、右(操作)はコンパクトに固定上限を設ける。
-       右ブロックが大きくなりすぎてひっ算が狭くなるのを防ぐ */
-    grid-template-columns: minmax(0, 1fr) clamp(300px, 34vw, 460px);
-    gap: 2vw;
-    min-height: 0;
+    flex: 1; display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 30vw, 400px);
+    gap: 1.5vw; min-height: 0;
   }
 
-  /* ============ LEFT: CALC PANEL (方眼ノート) ============ */
+  /* ============ LEFT: CALC PANEL ============ */
   .calc-panel {
-    background: white;
-    border: 2px solid var(--line);
-    border-radius: 1.5vw;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 0 var(--line);
+    background: white; border: 2px solid var(--line); border-radius: 1.5vw;
+    position: relative; overflow: hidden; box-shadow: 0 4px 0 var(--line);
   }
-  /* 左の赤い縦ライン（ノートっぽさ） */
   .calc-panel::before {
-    content: "";
-    position: absolute; left: 0; top: 0; bottom: 0;
-    width: 8px;
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px;
     background: linear-gradient(to bottom, var(--accent-2), var(--accent));
     opacity: 0.6; z-index: 5;
   }
-
-  /* 方眼背景のレイヤー: divisionと座標が完全一致するように、
-     JSでoffset(--gx, --gy)をdivisionの位置に合わせる */
   .calc-grid {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background-image:
       linear-gradient(to right, var(--grid) 1px, transparent 1px),
       linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
     background-size: var(--cell) var(--cell);
     background-position: var(--gx, 0px) var(--gy, 0px);
   }
+  .division { position: absolute; z-index: 2; }
 
-  /* ひっ算配置エリア（絶対座標、JSで位置調整） */
-  .division {
+  /* 右側: かけ算ワークスペース(残す) — グリッドに揃えた縦ひっ算 */
+  .mult-workspace {
+    position: absolute; z-index: 4;
+    pointer-events: none;
+  }
+  .mult-ws-title {
     position: absolute;
-    /* topとleftはJSでマス単位に合わせて設定 */
-    z-index: 2;
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(0.7rem, 1.5vh, 0.95rem);
+    color: var(--purple);
+    background: #f3eff8; border: 1.5px solid var(--purple);
+    border-radius: 999px; padding: 0.2em 0.9em;
+    white-space: nowrap;
+  }
+  /* 1つ分の縦ひっ算(グリッド1マス=1文字) */
+  .mult-hissan {
+    position: absolute;
+    border-radius: 10px;
+    transition: background 0.25s, box-shadow 0.25s;
+  }
+  .mult-hissan.newpop { animation: multPop 0.4s cubic-bezier(0.34,1.4,0.64,1); }
+  .mult-hissan.rejected { opacity: 0.6; }
+  .mult-hissan.accepted { background: #edf5ee; box-shadow: inset 0 0 0 2px rgba(90,159,107,0.35); }
+
+  .mult-cell {
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-hand); font-weight: 600;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .mult-cell.op { color: var(--purple); font-weight: 700; }
+  .mult-cell.carry {
+    color: var(--accent-2); font-weight: 700;
+    align-items: flex-end; padding-bottom: 0.1em;
+    opacity: 0.9;
+  }
+  .mult-cell.typing {
+    color: var(--purple); font-weight: 700;
+    background: rgba(138,111,176,0.1); border-radius: 6px;
+  }
+  .mult-cell.carry.typing-carry {
+    color: var(--purple);
+    background: rgba(138,111,176,0.1); border-radius: 6px;
+  }
+  /* かけ算の答えを わり算ひっ算へ転記するときの飛ぶ数字 */
+  .fly-digit {
+    position: absolute; z-index: 30;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-hand); font-weight: 600;
+    color: var(--purple);
+    pointer-events: none;
+    transition: left 0.55s cubic-bezier(0.5,0,0.3,1), top 0.55s cubic-bezier(0.5,0,0.3,1), transform 0.55s, color 0.55s;
+  }
+  .cell.copy-land { animation: copyLand 0.4s cubic-bezier(0.34,1.5,0.6,1); }
+  @keyframes copyLand {
+    0% { transform: scale(1.35); color: var(--purple); }
+    60% { transform: scale(0.9); }
+    100% { transform: scale(1); color: var(--ink); }
+  }
+  .p-row-highlight {
+    position: absolute; z-index: 3; pointer-events: none;
+    border: 2.5px dashed var(--accent-2); border-radius: 8px;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .p-row-highlight.show { opacity: 0.85; animation: pRowPulse 1.2s ease-in-out infinite; }
+  @keyframes pRowPulse { 0%,100% { opacity: 0.5; } 50% { opacity: 0.95; } }
+  .mult-hissan.rejected .mult-cell { color: var(--ink-soft); }
+  /* 取り消し線(ひけない積) */
+  .mult-strike {
+    position: absolute; height: 3px; background: var(--accent-2);
+    border-radius: 3px; z-index: 2;
+    transform-origin: center;
+  }
+  .mult-underline {
+    position: absolute; height: 3px; background: var(--ink); border-radius: 3px;
+  }
+  .mult-note {
+    position: absolute;
+    font-family: var(--font-display); font-weight: 700;
+    white-space: nowrap;
+  }
+  .mult-hissan.rejected .mult-note { color: var(--accent-2); }
+  .mult-hissan.accepted .mult-note { color: var(--green); }
+  .mult-cell.answer-blank {
+    box-shadow: inset 0 0 0 2px rgba(138,111,176,0.4);
+    border-radius: 6px; background: rgba(138,111,176,0.07);
+  }
+  .mult-cell.error { animation: shake 0.5s, flashRed 0.6s 3; color: var(--accent-2) !important; }
+  .mult-cell.correct-pop { animation: pop 0.4s; }
+  @keyframes multPop {
+    0% { transform: scale(0.5) translateY(-10px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
   }
 
-  /* セル（方眼の1マス） */
   .cell {
-    position: absolute;
-    width: var(--cell);
-    height: var(--cell);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-hand);
-    font-weight: 600;
-    font-size: calc(var(--cell) * 0.7);
+    position: absolute; width: var(--cell); height: var(--cell);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-hand); font-weight: 600;
+    font-size: calc(var(--cell) * 0.68);
     color: var(--ink);
     transition: background 0.25s ease, box-shadow 0.25s ease;
     line-height: 1;
   }
   .cell.spot {
-    background: rgba(245, 200, 66, 0.4);
-    border-radius: 6px;
+    background: rgba(245, 200, 66, 0.4); border-radius: 6px;
     box-shadow: 0 0 0 2px rgba(245, 200, 66, 0.7);
   }
-  /* ヒント: 計算ソースとなる数字を緑のパルスで強調 */
-  .cell.hint-source,
-  .divisor-cell.hint-source {
+  .cell.hint-source, .divisor-cell.hint-source {
     color: var(--green) !important;
     animation: hintPulse 1.4s ease-in-out infinite !important;
-    border-radius: 6px;
-    z-index: 3;
+    border-radius: 6px; z-index: 3;
   }
   @keyframes hintPulse {
-    0%, 100% {
-      background: rgba(90, 159, 107, 0.15);
-      box-shadow: 0 0 0 2px rgba(90, 159, 107, 0.4);
-      transform: scale(1);
-    }
-    50% {
-      background: rgba(90, 159, 107, 0.35);
-      box-shadow: 0 0 0 4px rgba(90, 159, 107, 0.7);
-      transform: scale(1.08);
-    }
+    0%, 100% { background: rgba(90,159,107,0.15); box-shadow: 0 0 0 2px rgba(90,159,107,0.4); transform: scale(1); }
+    50% { background: rgba(90,159,107,0.35); box-shadow: 0 0 0 4px rgba(90,159,107,0.7); transform: scale(1.08); }
   }
-  /* 演算記号ヒント (÷ × -) */
+
+  /* 指隠しマスク: 一の位をかぶせる */
+  .mask-cover {
+    position: absolute; z-index: 6;
+    border-radius: 8px;
+    background:
+      repeating-linear-gradient(45deg, var(--mask), var(--mask) 6px, #5b6b7d 6px, #5b6b7d 12px);
+    box-shadow: 0 3px 8px rgba(44,58,74,0.35), inset 0 0 0 2px rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; pointer-events: auto;
+    animation: maskDrop 0.3s cubic-bezier(0.34,1.3,0.64,1);
+    transition: transform 0.12s;
+  }
+  .mask-cover:active { transform: scale(0.92); }
+  .mask-cover::after {
+    content: "✋"; font-size: calc(var(--cell) * 0.45); filter: grayscale(0.2);
+  }
+  @keyframes maskDrop {
+    0% { transform: translateY(-40%) scale(0.8); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  /* マスクできる一の位に「ここ隠せるよ」のヒント枠 */
+  .cell.maskable, .divisor-cell.maskable {
+    box-shadow: inset 0 0 0 2px rgba(74,85,104,0.4);
+    border-radius: 8px;
+    cursor: pointer; pointer-events: auto;
+    animation: maskableGlow 1.6s ease-in-out infinite;
+  }
+  @keyframes maskableGlow {
+    0%,100% { box-shadow: inset 0 0 0 2px rgba(74,85,104,0.35); }
+    50% { box-shadow: inset 0 0 0 3px rgba(74,85,104,0.7); }
+  }
+  /* 十の位: 見当に使う位を強調 */
+  .cell.tens-focus, .divisor-cell.tens-focus {
+    color: var(--blue) !important;
+    animation: tensFocus 1.4s ease-in-out infinite;
+    border-radius: 6px; z-index: 3;
+  }
+  @keyframes tensFocus {
+    0%,100% { background: rgba(74,144,200,0.14); box-shadow: 0 0 0 2px rgba(74,144,200,0.35); }
+    50% { background: rgba(74,144,200,0.3); box-shadow: 0 0 0 4px rgba(74,144,200,0.6); }
+  }
+
+  .cell.error { animation: shake 0.5s, flashRed 0.6s 3; color: var(--accent-2); }
+  .cell.correct-pop { animation: pop 0.4s; color: var(--green); }
+  .cell.fade-in { animation: fadeIn 0.3s; }
+  .cell.drop-anim { animation: dropDown 0.6s cubic-bezier(0.34, 1.4, 0.64, 1); }
+  .cell.faded { color: var(--line); opacity: 0.5; }
+
+  .divisor-cell {
+    position: absolute; width: var(--cell); height: var(--cell);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-hand); font-weight: 600;
+    font-size: calc(var(--cell) * 0.68);
+    color: var(--ink); line-height: 1;
+  }
+
+  .bracket-line { position: absolute; width: 3px; background: var(--ink); border-radius: 3px; }
+  .top-bar-line { position: absolute; height: 3px; background: var(--ink); border-radius: 3px; }
+  .sub-line { position: absolute; height: 3px; background: var(--ink); border-radius: 3px; }
+
+  .remainder-tag {
+    position: absolute; display: flex; align-items: center; gap: 0.4em;
+    font-family: var(--font-hand); font-size: calc(var(--cell) * 0.4);
+    color: var(--ink-soft); white-space: nowrap; z-index: 3;
+  }
+  .remainder-tag .label { background: var(--paper-2); padding: 0.2em 0.5em; border-radius: 6px; }
+  .remainder-tag .value { color: var(--accent); font-weight: 700; min-width: 1.2em; text-align: center; }
+
+  /* 演算記号ヒント */
   .op-hint {
-    position: absolute;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-display);
-    font-weight: 900;
-    font-size: calc(var(--cell) * 0.5);
-    color: var(--green);
-    pointer-events: none;
-    z-index: 4;
-    background: white;
-    border: 2px solid var(--green);
-    border-radius: 50%;
-    width: calc(var(--cell) * 0.55);
-    height: calc(var(--cell) * 0.55);
-    box-shadow: 0 2px 8px rgba(90, 159, 107, 0.35);
+    position: absolute; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 900;
+    font-size: calc(var(--cell) * 0.5); color: var(--green);
+    pointer-events: none; z-index: 4;
+    background: white; border: 2px solid var(--green); border-radius: 50%;
+    width: calc(var(--cell) * 0.55); height: calc(var(--cell) * 0.55);
+    box-shadow: 0 2px 8px rgba(90,159,107,0.35);
     animation: opHintIn 0.35s ease-out, opHintBounce 1.4s ease-in-out 0.35s infinite;
   }
-  @keyframes opHintIn {
-    0%   { transform: scale(0) rotate(-90deg); opacity: 0; }
-    100% { transform: scale(1) rotate(0deg);   opacity: 1; }
-  }
-  @keyframes opHintBounce {
-    0%, 100% { transform: scale(1); }
-    50%      { transform: scale(1.15); }
-  }
-  .cell.error {
-    animation: shake 0.5s, flashRed 0.6s 3;
-    color: var(--accent-2);
-  }
-  .cell.correct-pop {
-    animation: pop 0.4s;
-    color: var(--green);
-  }
-  .cell.fade-in {
-    animation: fadeIn 0.3s;
-  }
-  .cell.drop-anim {
-    animation: dropDown 0.6s cubic-bezier(0.34, 1.4, 0.64, 1);
-  }
-  /* 中間計算の0を薄く表示 (例: 648÷2 で 6-6=0 のとき) */
-  .cell.faded {
-    color: var(--line);
-    opacity: 0.5;
-  }
-  /* leadingZeroモードの商の先頭0: 薄く表示(入力直後)。fadedより少し見えるグレーに */
-  .cell.lead-zero {
-    color: var(--ink-soft);
-    opacity: 0.55;
-    position: relative;
-  }
-  /* 問題完了時: 斜線を引いて「消した」ことを示す */
-  .cell.lead-zero.struck::after {
-    content: "";
-    position: absolute;
-    left: 12%;
-    right: 12%;
-    top: 50%;
-    height: 3px;
-    background: var(--accent-2);
-    border-radius: 3px;
-    transform: rotate(-25deg);
-    transform-origin: center;
-    animation: strikeIn 0.35s ease-out forwards;
-  }
-  @keyframes strikeIn {
-    0%   { transform: rotate(-25deg) scaleX(0); opacity: 0; }
-    100% { transform: rotate(-25deg) scaleX(1); opacity: 1; }
-  }
-  /* 薄字(faded)の0は計算ソースとして扱わない (例: 「09÷3」と誤読されるのを防ぐ)
-     hint-sourceクラスが付いても、fadedの見た目を優先する */
-  .cell.faded.hint-source {
-    color: var(--line) !important;
-    opacity: 0.5 !important;
-    animation: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
+  @keyframes opHintIn { 0% { transform: scale(0) rotate(-90deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+  @keyframes opHintBounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 
-  /* divisor（わる数）+ ブラケット記号 */
-  .divisor-cell {
-    /* 数字部分 */
-    position: absolute;
-    width: var(--cell);
-    height: var(--cell);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-hand);
-    font-weight: 600;
-    font-size: calc(var(--cell) * 0.7);
-    color: var(--ink);
-    line-height: 1;
-  }
-
-  /* ÷の役を果たすブラケット ")" の縦線 */
-  .bracket-line {
-    position: absolute;
-    width: 3px;
-    background: var(--ink);
-    border-radius: 3px;
-  }
-  /* 上線（商の下、わられる数の上） */
-  .top-bar-line {
-    position: absolute;
-    height: 3px;
-    background: var(--ink);
-    border-radius: 3px;
-  }
-  /* かけ算の結果の下の線 */
-  .sub-line {
-    position: absolute;
-    height: 3px;
-    background: var(--ink);
-    border-radius: 3px;
-  }
-
-  /* あまり表示タグ */
-  .remainder-tag {
-    position: absolute;
-    display: flex; align-items: center; gap: 0.4em;
-    font-family: var(--font-hand);
-    font-size: calc(var(--cell) * 0.4);
-    color: var(--ink-soft); white-space: nowrap;
-    z-index: 3;
-  }
-  .remainder-tag .label {
-    background: var(--paper-2); padding: 0.2em 0.5em;
-    border-radius: 6px;
-  }
-  .remainder-tag .value {
-    color: var(--accent); font-weight: 700;
-    min-width: 1.2em; text-align: center;
-  }
-
-  /* ============ 大きな赤丸（正解マーク） ============ */
+  /* 大きな赤丸 */
   .big-maru {
-    position: absolute;
-    /* 位置・サイズは JS(positionCorrectMark)で筆算を避けて動的に設定する。
-       下記はフォールバック値 */
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 10;
-    gap: 1vh;
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none; z-index: 10; gap: 1vh;
   }
   .big-maru .maru-svg-wrap {
-    /* サイズは JS で配置領域に合わせて上書きする。下記はフォールバック */
-    width: 40vh;
-    max-width: 90%;
-    height: 40vh;
-    max-height: 90%;
+    width: 40vh; max-width: 90%; height: 40vh; max-height: 90%;
     animation: maruDraw 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
   }
-  .big-maru svg {
-    width: 100%;
-    height: 100%;
-  }
+  .big-maru svg { width: 100%; height: 100%; }
   .big-maru circle {
-    fill: none;
-    stroke: var(--maru-red);
-    stroke-width: 12;
-    stroke-linecap: round;
-    stroke-dasharray: 1200;
-    stroke-dashoffset: 1200;
+    fill: none; stroke: var(--maru-red); stroke-width: 12; stroke-linecap: round;
+    stroke-dasharray: 1200; stroke-dashoffset: 1200;
     animation: maruStroke 0.7s ease-out forwards;
     filter: drop-shadow(0 4px 8px rgba(230, 57, 70, 0.3));
   }
-  @keyframes maruDraw {
-    0%   { transform: scale(0.3) rotate(-30deg); opacity: 0; }
-    60%  { transform: scale(1.1) rotate(5deg);  opacity: 1; }
-    100% { transform: scale(1)   rotate(0deg);   opacity: 1; }
-  }
-  @keyframes maruStroke {
-    to { stroke-dashoffset: 0; }
-  }
+  @keyframes maruDraw { 0% { transform: scale(0.3) rotate(-30deg); opacity: 0; } 60% { transform: scale(1.1) rotate(5deg); opacity: 1; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+  @keyframes maruStroke { to { stroke-dashoffset: 0; } }
   .big-maru .seikai-text {
-    font-family: var(--font-display);
-    font-weight: 900;
-    font-size: clamp(1.5rem, 4.5vh, 2.6rem);
-    color: var(--maru-red);
-    background: white;
-    padding: 0.4em 1.2em;
-    border-radius: 999px;
+    font-family: var(--font-display); font-weight: 900;
+    font-size: clamp(1.5rem, 4.5vh, 2.6rem); color: var(--maru-red);
+    background: white; padding: 0.4em 1.2em; border-radius: 999px;
     border: 3px solid var(--maru-red);
     box-shadow: 0 6px 0 #b32530, 0 10px 25px rgba(230, 57, 70, 0.3);
-    letter-spacing: 0.15em;
-    opacity: 0;
-    animation: textPop 0.4s 0.6s forwards;
+    letter-spacing: 0.15em; opacity: 0; animation: textPop 0.4s 0.6s forwards;
   }
-  @keyframes textPop {
-    0%   { transform: translateY(20px) scale(0.5); opacity: 0; }
-    100% { transform: translateY(0) scale(1); opacity: 1; }
-  }
+  @keyframes textPop { 0% { transform: translateY(20px) scale(0.5); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
 
-  /* ============ ANIMATIONS ============ */
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-6px); }
-    40%, 80% { transform: translateX(6px); }
-  }
-  @keyframes flashRed {
-    0%, 100% { background: transparent; }
-    50% { background: rgba(232, 90, 79, 0.3); border-radius: 8px; }
-  }
-  @keyframes pop {
-    0%   { transform: scale(0.5); opacity: 0; }
-    60%  { transform: scale(1.2); }
-    100% { transform: scale(1);   opacity: 1; }
-  }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+  @keyframes flashRed { 0%,100% { background: transparent; } 50% { background: rgba(232,90,79,0.3); border-radius: 8px; } }
+  @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 60% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes dropDown {
-    0%   { transform: translateY(calc(var(--cell) * -3)); opacity: 0; }
-    60%  { transform: translateY(calc(var(--cell) * 0.2)); opacity: 1; }
-    100% { transform: translateY(0); opacity: 1; }
-  }
+  @keyframes dropDown { 0% { transform: translateY(calc(var(--cell) * -3)); opacity: 0; } 60% { transform: translateY(calc(var(--cell) * 0.2)); opacity: 1; } 100% { transform: translateY(0); opacity: 1; } }
 
   /* ============ RIGHT: CONTROLS ============ */
-  .controls {
-    display: flex; flex-direction: column;
-    gap: 2vh; min-height: 0;
-  }
+  .controls { display: flex; flex-direction: column; gap: 1.5vh; min-height: 0; }
   .step-panel {
-    background: white; border: 2px solid var(--line);
-    border-radius: 1.5vw; padding: 2vh 1.5vw;
-    box-shadow: 0 4px 0 var(--line);
+    background: white; border: 2px solid var(--line); border-radius: 1.5vw;
+    padding: 1.6vh 1.2vw; box-shadow: 0 4px 0 var(--line);
   }
-  .panel-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 1.5vh;
-  }
-  .panel-title {
-    font-family: var(--font-display); font-weight: 700;
-    font-size: clamp(0.95rem, 1.2vw, 1.1rem); color: var(--ink);
-  }
-  .step-hint {
-    font-family: var(--font-hand);
-    font-size: clamp(0.7rem, 0.9vw, 0.85rem); color: var(--ink-soft);
-  }
-  .step-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1vw;
-  }
+  .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2vh; }
+  .panel-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(0.95rem, 1.2vw, 1.1rem); color: var(--ink); }
+  .step-hint { font-family: var(--font-hand); font-size: clamp(0.7rem, 0.9vw, 0.85rem); color: var(--ink-soft); }
+  .step-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8vw; }
   .step-btn {
-    aspect-ratio: 1 / 0.85;
-    background: white; border: 3px solid var(--line);
-    border-radius: 1vw;
+    aspect-ratio: 1 / 0.9;
+    background: white; border: 3px solid var(--line); border-radius: 1vw;
     box-shadow: 0 4px 0 var(--line);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 0.4vh; transition: all 0.1s;
-    font-family: var(--font-display);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.3vh; transition: all 0.1s; font-family: var(--font-display);
   }
   .step-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--line); }
-  .step-btn .step-icon { font-size: clamp(1.4rem, 2.5vh, 2rem); }
-  .step-btn .step-label {
-    font-weight: 900; font-size: clamp(0.95rem, 1.4vw, 1.2rem);
-    letter-spacing: 0.08em;
-  }
+  .step-btn .step-icon { font-size: clamp(1.3rem, 2.4vh, 1.9rem); }
+  .step-btn .step-label { font-weight: 900; font-size: clamp(0.85rem, 1.3vw, 1.1rem); letter-spacing: 0.05em; }
+  .step-btn .step-sub { font-family: var(--font-hand); font-weight: 600; font-size: clamp(0.55rem, 0.8vw, 0.7rem); color: var(--ink-soft); }
   .step-btn.tateru { color: var(--blue); }
   .step-btn.tateru.next  { border-color: var(--blue); box-shadow: 0 4px 0 var(--blue); background: #eef5fb; animation: pulse 1.5s infinite; }
   .step-btn.kakeru { color: var(--green); }
@@ -709,521 +481,167 @@
   .step-btn.hiku.next    { border-color: var(--purple); box-shadow: 0 4px 0 var(--purple); background: #f1edf5; animation: pulse 1.5s infinite; }
   .step-btn.orosu  { color: var(--accent); }
   .step-btn.orosu.next   { border-color: var(--accent); box-shadow: 0 4px 0 var(--accent); background: #fff5eb; animation: pulse 1.5s infinite; }
-  .step-btn.wrong {
-    animation: shake 0.5s;
-    background: #fde8e6; border-color: var(--accent-2);
-  }
-  @keyframes pulse {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
+  .step-btn.herasu { color: var(--accent-2); }
+  .step-btn.herasu.next  { border-color: var(--accent-2); box-shadow: 0 4px 0 var(--accent-2); background: #fdeceb; animation: pulse 1.5s infinite; }
+  .step-btn.wrong { animation: shake 0.5s; background: #fde8e6; border-color: var(--accent-2); }
+  @keyframes pulse { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
   .numpad-panel {
-    background: white; border: 2px solid var(--line);
-    border-radius: 1.5vw; padding: 2vh 1.5vw;
-    box-shadow: 0 4px 0 var(--line);
-    flex: 1; display: flex; flex-direction: column;
-    min-height: 0;
+    background: white; border: 2px solid var(--line); border-radius: 1.5vw;
+    padding: 1.6vh 1.2vw; box-shadow: 0 4px 0 var(--line);
+    flex: 1; display: flex; flex-direction: column; min-height: 0;
   }
-  .numpad-panel.disabled .num-btn {
-    opacity: 0.35; cursor: not-allowed; pointer-events: none;
-  }
+  .numpad-panel.disabled .num-btn { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
   .numpad-panel.disabled { background: #f8f5ed; }
   .numpad-grid {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    /* 行の高さに上限を設け、縦に間延びさせない */
-    grid-template-rows: repeat(2, minmax(0, 15vh));
-    gap: 0.8vw;
-    min-height: 0;
-    align-content: center;
+    flex: 1; display: grid; grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 14vh)); gap: 0.7vw; min-height: 0; align-content: center;
   }
   .num-btn {
-    background: white; border: 3px solid var(--line);
-    border-radius: 1vw;
+    background: white; border: 3px solid var(--line); border-radius: 1vw;
     font-family: var(--font-hand); font-weight: 600;
-    font-size: clamp(1.8rem, 4vh, 2.8rem);
-    color: var(--ink);
-    box-shadow: 0 4px 0 var(--line);
-    transition: all 0.08s;
+    font-size: clamp(1.8rem, 4vh, 2.8rem); color: var(--ink);
+    box-shadow: 0 4px 0 var(--line); transition: all 0.08s;
     display: flex; align-items: center; justify-content: center;
   }
-  .numpad-panel:not(.disabled) .num-btn:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 var(--accent);
-    background: #fff8ef;
-  }
-  .num-btn.wrong {
-    animation: shake 0.5s;
-    background: #fde8e6;
-    border-color: var(--accent-2);
-    color: var(--accent-2);
-  }
+  .numpad-panel:not(.disabled) .num-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--accent); background: #fff8ef; }
+  .num-btn.wrong { animation: shake 0.5s; background: #fde8e6; border-color: var(--accent-2); color: var(--accent-2); }
 
-  /* ============ NEXT BUTTON (大きな次へ) ============ */
+  /* 「1へらす」大ボタン(修正が必要なとき用) */
+  .herasu-action {
+    background: var(--accent-2); color: white;
+    border-radius: 1vw; padding: 1.6vh 1vw;
+    font-family: var(--font-display); font-weight: 900;
+    font-size: clamp(1rem, 1.5vw, 1.3rem);
+    box-shadow: 0 4px 0 #b3453c; transition: all 0.1s;
+    display: none; align-items: center; justify-content: center; gap: 0.5em;
+    animation: pulse 1.2s infinite;
+  }
+  .herasu-action.show { display: flex; }
+  .herasu-action:active { transform: translateY(3px); box-shadow: 0 1px 0 #b3453c; }
+
   .next-q-btn {
-    position: absolute;
-    bottom: 4vh;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent);
-    color: white;
-    font-family: var(--font-display);
-    font-weight: 900;
-    font-size: clamp(1.2rem, 2.2vh, 1.6rem);
-    padding: 1.8vh 4vw;
-    border-radius: 999px;
+    position: absolute; bottom: 4vh; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: white;
+    font-family: var(--font-display); font-weight: 900;
+    font-size: clamp(1.2rem, 2.2vh, 1.6rem); padding: 1.8vh 4vw; border-radius: 999px;
     box-shadow: 0 5px 0 #c46d2c, 0 10px 25px rgba(240, 138, 62, 0.4);
-    z-index: 20;
-    letter-spacing: 0.08em;
-    display: none;
-    animation: nextBtnIn 0.5s 0.8s both;
+    z-index: 20; letter-spacing: 0.08em; display: none;
   }
   .next-q-btn:active { transform: translateX(-50%) translateY(3px); box-shadow: 0 2px 0 #c46d2c; }
   .next-q-btn.show { display: block; }
-  @keyframes nextBtnIn {
-    from { transform: translateX(-50%) translateY(40px); opacity: 0; }
-    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  .skip-btn {
+    position: absolute; top: 1.5vh; right: 1.5vh; z-index: 6;
+    background: rgba(255,255,255,0.75); border: 1.5px solid var(--line); border-radius: 999px;
+    padding: 0.6vh 1.1vw; font-family: var(--font-ui);
+    font-size: clamp(0.7rem, 1.1vh, 0.85rem); color: var(--ink-soft);
+    box-shadow: 0 2px 0 var(--line); opacity: 0.55; transition: all 0.15s; letter-spacing: 0.03em;
   }
+  .skip-btn:hover { opacity: 0.95; }
+  .skip-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); opacity: 1; }
 
   /* ============ MODAL ============ */
   .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(44, 58, 74, 0.6);
-    display: none; align-items: center; justify-content: center;
-    z-index: 100; backdrop-filter: blur(3px);
+    position: fixed; inset: 0; background: rgba(44,58,74,0.6);
+    display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(3px);
   }
   .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
   .modal {
-    background: var(--paper); border-radius: 2vw;
-    padding: 3vh 3vw;
-    max-width: 92vw; max-height: 92vh;
-    box-shadow: 0 20px 60px var(--shadow-deep);
+    background: var(--paper); border-radius: 2vw; padding: 3vh 3vw;
+    max-width: 92vw; max-height: 92vh; box-shadow: 0 20px 60px var(--shadow-deep);
     position: relative; animation: pop 0.3s;
   }
   .modal-close {
-    position: absolute; top: -1vh; right: -1vh;
-    width: 5vh; height: 5vh;
-    background: var(--accent-2); color: white;
-    border-radius: 50%; font-size: 2.5vh; font-weight: 900;
-    box-shadow: 0 4px 12px var(--shadow);
+    position: absolute; top: -1vh; right: -1vh; width: 5vh; height: 5vh;
+    background: var(--accent-2); color: white; border-radius: 50%;
+    font-size: 2.5vh; font-weight: 900; box-shadow: 0 4px 12px var(--shadow);
   }
   .modal-title {
     font-family: var(--font-display); font-weight: 900;
-    font-size: clamp(1.4rem, 2.5vh, 2rem);
-    text-align: center; color: var(--ink); margin-bottom: 2vh;
+    font-size: clamp(1.4rem, 2.5vh, 2rem); text-align: center; color: var(--ink); margin-bottom: 2vh;
   }
   .modal-title .deco { color: var(--accent); }
-  /* モーダル下部の使い方説明 */
   .modal-hint-note {
-    margin-top: 2vh;
-    text-align: center;
-    font-family: var(--font-hand);
-    font-size: clamp(0.75rem, 1.4vh, 0.95rem);
-    color: var(--ink-soft);
-    background: var(--paper-2);
-    padding: 1vh 2vw;
-    border-radius: 999px;
-    border: 1px dashed var(--line);
+    margin-top: 2vh; text-align: center; font-family: var(--font-hand);
+    font-size: clamp(0.75rem, 1.4vh, 0.95rem); color: var(--ink-soft);
+    background: var(--paper-2); padding: 1vh 2vw; border-radius: 999px; border: 1px dashed var(--line);
   }
-  .kuku-table {
-    display: grid;
-    grid-template-columns: auto repeat(9, 1fr);
-    gap: 2px; background: var(--ink);
-    border-radius: 1vw; overflow: hidden; padding: 2px;
-  }
-  .kuku-cell {
-    background: white; padding: 0.6vh 0.4vw;
-    text-align: center; font-family: var(--font-hand);
-    font-size: clamp(0.85rem, 1.4vh, 1.1rem);
-    color: var(--ink); font-weight: 600;
-  }
-  .kuku-header {
-    background: var(--accent); color: white;
-    font-family: var(--font-display); font-weight: 900;
-  }
-  .kuku-row-header {
-    background: var(--blue); color: white;
-    font-family: var(--font-display); font-weight: 900;
-  }
+  .kuku-table { display: grid; grid-template-columns: auto repeat(9, 1fr); gap: 2px; background: var(--ink); border-radius: 1vw; overflow: hidden; padding: 2px; }
+  .kuku-cell { background: white; padding: 0.6vh 0.4vw; text-align: center; font-family: var(--font-hand); font-size: clamp(0.85rem, 1.4vh, 1.1rem); color: var(--ink); font-weight: 600; }
+  .kuku-header { background: var(--accent); color: white; font-family: var(--font-display); font-weight: 900; }
+  .kuku-row-header { background: var(--blue); color: white; font-family: var(--font-display); font-weight: 900; }
 
-  /* ============ CHALLENGE METHOD MODAL ============ */
-  .method-modal { max-width: 640px; text-align: center; }
-  .method-q {
-    font-family: var(--font-hand);
-    font-size: clamp(1rem, 2.2vh, 1.3rem);
-    color: var(--ink); line-height: 1.7;
-    margin-bottom: 2vh;
+  /* ヒントボタン */
+  .hint-btn-container {
+    position: absolute; top: 1.5vh; right: calc(1.5vh + 100px); z-index: 6;
+    display: flex; flex-direction: column; align-items: center; gap: 0.3vh;
+    background: white; border: 3px solid var(--yellow); border-radius: 1.2vw; padding: 1vh 1.2vw;
+    box-shadow: 0 4px 0 var(--yellow), 0 6px 16px rgba(245,200,66,0.25);
+    cursor: pointer; font-family: var(--font-display); transition: all 0.15s;
+    animation: hintIdleGlow 2.5s ease-in-out infinite;
   }
-  .method-example {
-    display: flex; flex-wrap: wrap;
-    align-items: center; justify-content: center;
-    gap: 0.6em;
-    font-family: var(--font-hand);
-    font-size: clamp(0.8rem, 1.6vh, 1rem);
-    background: white;
-    border: 2px dashed var(--line);
-    border-radius: 1vw;
-    padding: 1.4vh 2vw;
-    margin-bottom: 2.5vh;
-  }
-  .method-example-label {
-    background: var(--accent); color: white;
-    font-family: var(--font-display); font-weight: 900;
-    border-radius: 999px; padding: 0.2em 0.8em;
-    font-size: 0.85em;
-  }
-  .method-example-yes { color: var(--purple); font-weight: 700; }
-  .method-example-no  { color: var(--blue);   font-weight: 700; }
-  .method-example-vs  { color: var(--ink-soft); }
-  .method-btn-row {
-    display: flex; gap: 3vw;
-    align-items: stretch; justify-content: center;
-  }
-  .method-btn {
-    flex: 1; max-width: 220px;
-    background: white; border: 3px solid var(--line);
-    border-radius: 1.4vw; padding: 2.4vh 1vw;
-    display: flex; flex-direction: column;
-    align-items: center; gap: 0.6vh;
-    box-shadow: 0 5px 0 var(--line);
-    transition: all 0.15s;
-    font-family: var(--font-display);
-  }
-  .method-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--line); }
-  .method-btn .method-btn-icon { font-size: clamp(1.8rem, 4vh, 2.6rem); line-height: 1; }
-  .method-btn .method-btn-label {
-    font-weight: 900; font-size: clamp(1.1rem, 2.4vh, 1.5rem);
-    letter-spacing: 0.08em;
-  }
-  .method-btn .method-btn-sub {
-    font-family: var(--font-hand);
-    font-size: clamp(0.7rem, 1.4vh, 0.9rem);
-    color: var(--ink-soft);
-  }
-  .method-btn.yes { color: var(--purple); }
-  .method-btn.yes:hover { border-color: var(--purple); box-shadow: 0 5px 0 var(--purple); background: #f3eff8; }
-  .method-btn.no { color: var(--blue); }
-  .method-btn.no:hover { border-color: var(--blue); box-shadow: 0 5px 0 var(--blue); background: #eef5fb; }
-
-  @media (max-width: 599px) {
-    .method-modal { max-width: 94vw; }
-    .method-btn-row { gap: 4vw; }
-    .method-btn { padding: 2vh 2vw; border-radius: 3vw; }
-  }
+  .hint-btn-container:hover { transform: translateY(-2px); }
+  .hint-btn-container:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--yellow); }
+  .hint-btn-icon { font-size: clamp(1.3rem, 2.8vh, 1.8rem); line-height: 1; }
+  .hint-btn-label { font-size: clamp(0.65rem, 1.1vh, 0.85rem); font-weight: 700; color: #b8860b; letter-spacing: 0.06em; }
+  @keyframes hintIdleGlow { 0%,100% { box-shadow: 0 4px 0 var(--yellow), 0 6px 16px rgba(245,200,66,0.25); } 50% { box-shadow: 0 4px 0 var(--yellow), 0 6px 24px rgba(245,200,66,0.55); } }
 
   /* ============ RESULT SCREEN ============ */
-  #resultScreen {
-    flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 4vh 4vw; gap: 3vh;
-  }
+  #resultScreen { flex-direction: column; align-items: center; justify-content: center; padding: 4vh 4vw; gap: 3vh; }
   .result-card {
-    background: white; border-radius: 2vw;
-    padding: 5vh 8vw;
+    background: white; border-radius: 2vw; padding: 5vh 8vw;
     box-shadow: 0 8px 0 var(--line), 0 20px 40px var(--shadow);
-    text-align: center; border: 3px solid var(--accent);
-    position: relative;
+    text-align: center; border: 3px solid var(--accent); position: relative;
   }
-  .result-emoji {
-    font-size: clamp(4rem, 12vh, 7rem);
-    line-height: 1; margin-bottom: 2vh;
-    animation: bounce 1.5s infinite;
-  }
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-  }
-  .result-title {
-    font-family: var(--font-display); font-weight: 900;
-    font-size: clamp(2rem, 4vh, 3rem);
-    color: var(--ink); margin-bottom: 1vh;
-  }
-  .result-score {
-    font-family: var(--font-display); font-weight: 900;
-    font-size: clamp(2.5rem, 6vh, 4rem);
-    color: var(--accent); margin: 2vh 0;
-  }
+  .result-emoji { font-size: clamp(4rem, 12vh, 7rem); line-height: 1; margin-bottom: 2vh; animation: bounce 1.5s infinite; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+  .result-title { font-family: var(--font-display); font-weight: 900; font-size: clamp(2rem, 4vh, 3rem); color: var(--ink); margin-bottom: 1vh; }
+  .result-score { font-family: var(--font-display); font-weight: 900; font-size: clamp(2.5rem, 6vh, 4rem); color: var(--accent); margin: 2vh 0; }
   .result-score small { font-size: 0.5em; color: var(--ink-soft); }
-  .result-msg {
-    font-family: var(--font-hand);
-    font-size: clamp(1rem, 1.8vh, 1.3rem);
-    color: var(--ink-soft); margin-bottom: 3vh;
-  }
-  .result-buttons {
-    display: flex; gap: 2vw; justify-content: center;
-  }
-  .result-btn {
-    background: white; border: 3px solid var(--line);
-    color: var(--ink); font-family: var(--font-display);
-    font-weight: 700; font-size: clamp(1rem, 1.6vh, 1.2rem);
-    padding: 1.5vh 2.5vw; border-radius: 999px;
-    box-shadow: 0 4px 0 var(--line);
-    transition: all 0.15s;
-  }
-  .result-btn.primary {
-    background: var(--accent); color: white;
-    border-color: var(--accent);
-    box-shadow: 0 4px 0 #c46d2c;
-  }
+  .result-msg { font-family: var(--font-hand); font-size: clamp(1rem, 1.8vh, 1.3rem); color: var(--ink-soft); margin-bottom: 3vh; }
+  .result-buttons { display: flex; gap: 2vw; justify-content: center; }
+  .result-btn { background: white; border: 3px solid var(--line); color: var(--ink); font-family: var(--font-display); font-weight: 700; font-size: clamp(1rem, 1.6vh, 1.2rem); padding: 1.5vh 2.5vw; border-radius: 999px; box-shadow: 0 4px 0 var(--line); transition: all 0.15s; }
+  .result-btn.primary { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 0 #c46d2c; }
   .result-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--line); }
   .result-btn.primary:active { box-shadow: 0 2px 0 #c46d2c; }
+  .confetti { position: fixed; pointer-events: none; inset: 0; overflow: hidden; z-index: 50; }
+  .confetti-piece { position: absolute; width: 12px; height: 12px; opacity: 0.9; animation: confettiFall linear forwards; }
+  @keyframes confettiFall { 0% { transform: translateY(-100vh) rotate(0deg); } 100% { transform: translateY(110vh) rotate(720deg); } }
 
-  .confetti {
-    position: fixed; pointer-events: none;
-    inset: 0; overflow: hidden; z-index: 50;
-  }
-  .confetti-piece {
-    position: absolute; width: 12px; height: 12px;
-    opacity: 0.9; animation: confettiFall linear forwards;
-  }
-  @keyframes confettiFall {
-    0% { transform: translateY(-100vh) rotate(0deg); }
-    100% { transform: translateY(110vh) rotate(720deg); }
-  }
-
-  /* 中間サイズ(タブレット等): 横向きは横並びのまま操作ブロックを少し狭める。
-     縦向きのときだけ縦積みにする(横幅が足りないため) */
+  /* ============ RESPONSIVE ============ */
   @media (max-width: 1100px) and (orientation: landscape) {
-    .main-body {
-      grid-template-columns: minmax(0, 1fr) clamp(260px, 30vw, 380px);
-      gap: 1.5vw;
-    }
+    .main-body { grid-template-columns: minmax(0, 1fr) clamp(250px, 28vw, 350px); gap: 1.2vw; }
   }
   @media (max-width: 900px) and (orientation: portrait) {
-    .main-body {
-      grid-template-columns: 1fr;
-      display: flex;
-      flex-direction: column;
-    }
-    .level-grid { grid-template-columns: repeat(3, 1fr); }
-    /* ひっ算を上部にしっかり確保し、操作ブロックは下に。
-       ひっ算が潰れて文字が小さくなるのを防ぐ */
-    .calc-panel { flex: 0 0 46vh; min-height: 46vh; }
+    .main-body { display: flex; flex-direction: column; }
+    .level-grid { grid-template-columns: repeat(2, 1fr); }
+    .calc-panel { flex: 0 0 48vh; min-height: 48vh; }
     .controls { flex: 1 1 auto; }
   }
-  @media (max-width: 900px) and (orientation: landscape) {
-    .level-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-
-  /* ============ スマホ縦長対応 ============ */
   @media (max-width: 599px) {
-
-    /* タイトル画面: 中央寄せをやめ、上から並べてスクロールできるようにする
-       (コンテンツが画面より高いと中央寄せでは上端が切れてしまうため) */
-    #titleScreen {
-      justify-content: flex-start;
-      padding: 2.5vh 4vw calc(2.5vh + env(safe-area-inset-bottom, 0px));
-      gap: 1.6vh;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .title-header { flex-shrink: 0; }
-    .app-title {
-      font-size: clamp(1.3rem, 6.5vw, 2rem);
-      letter-spacing: 0.02em;
-      line-height: 1.2;
-    }
-    .app-title::before, .app-title::after { display: none; }
-    .app-subtitle { font-size: 0.8rem; margin-top: 0.2em; }
-    .section-label { font-size: 0.9rem; margin-bottom: 0.6vh; }
-    .level-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 2vw; width: 96vw;
-    }
-    /* カードは内容に合わせた高さにして、縦の間延びを防ぐ */
-    .level-card {
-      min-height: 0; padding: 1.2vh 1.5vw;
-      border-radius: 3vw; gap: 0.3vh;
-    }
-    .level-card .lv-num { font-size: clamp(1.3rem, 5.5vw, 1.8rem); }
-    .level-card .lv-num small { font-size: 0.4em; margin-bottom: 0.15em; }
-    .level-card .lv-num .lv-sub { font-size: 0.3em; padding: 0.2em 0.5em; margin-top: 0.25em; }
-    .level-card .lv-title { font-size: clamp(0.8rem, 3.5vw, 0.95rem); }
-    .level-card .lv-desc { font-size: 0.68rem; line-height: 1.3; }
-    .mode-row { gap: 3vw; }
-    .mode-btn { padding: 1.2vh 4vw; font-size: 0.85rem; }
-    .start-btn {
-      font-size: 1.1rem; padding: 1.4vh 8vw;
-      flex-shrink: 0;
-    }
-
-    /* メイン画面: 縦積みに変更 */
-    #mainScreen {
-      padding: 1vh 2vw;
-      gap: 1vh;
-    }
-
-    /* トップバーをコンパクトに */
-    .top-bar { padding: 0 0.5vw; }
-    .pill { padding: 0.5vh 2.5vw; font-size: 0.78rem; }
-    .icon-btn {
-      width: 36px; height: 36px;
-      font-size: 1rem;
-    }
-
-    /* メインボディ: ひっ算(上) → コントロール(下) の縦積み */
-    .main-body {
-      display: flex;
-      flex-direction: column;
-      gap: 1vh;
-    }
-
-    /* ひっ算エリアは上部に固定高さ。見やすさのため少し広げる */
-    .calc-panel {
-      flex: 0 0 44vh;
-      min-height: 44vh;
-      border-radius: 3vw;
-    }
-
-    /* スマホ縦: ヒントボタンを少し小さく */
-    .hint-btn-container {
-      top: 1vh;
-      right: 1vh;
-      padding: 0.7vh 2vw;
-      border-radius: 2.5vw;
-      border-width: 2px;
-      gap: 0.1vh;
-    }
-    .hint-btn-icon { font-size: 1.2rem; }
-    .hint-btn-label { font-size: 0.65rem; }
-
-    /* スマホ縦: スキップボタンも合わせて小さく */
-    .skip-btn {
-      top: 1vh;
-      right: calc(1vh + 64px);
-      padding: 0.5vh 2vw;
-      font-size: 0.65rem;
-    }
-
-    /* コントロールエリア */
-    .controls {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 1vh;
-      min-height: 0;
-    }
-
-    /* 手順ボタンパネル */
-    .step-panel {
-      border-radius: 3vw;
-      padding: 1.2vh 2.5vw;
-    }
-    .panel-header { margin-bottom: 0.8vh; }
-    .panel-title { font-size: 0.82rem; }
-    .step-hint { font-size: 0.7rem; }
-    .step-grid { gap: 1.5vw; }
-    .step-btn {
-      aspect-ratio: 1 / 0.9;
-      border-radius: 2.5vw;
-      border-width: 2px;
-      box-shadow: 0 3px 0 var(--line);
-      gap: 0.2vh;
-    }
-    .step-btn .step-icon { font-size: 1.4rem; }
-    .step-btn .step-label { font-size: 0.85rem; letter-spacing: 0; }
-
-    /* テンキーパネル */
-    .numpad-panel {
-      flex: 1;
-      border-radius: 3vw;
-      padding: 1.2vh 2.5vw;
-      min-height: 0;
-    }
-    .numpad-grid { gap: 1.5vw; }
-    .num-btn {
-      border-radius: 2.5vw;
-      border-width: 2px;
-      box-shadow: 0 3px 0 var(--line);
-      font-size: clamp(1.4rem, 6vw, 2rem);
-    }
-
-    /* 次の問題へボタン */
-    .next-q-btn {
-      font-size: 1rem;
-      padding: 1.4vh 6vw;
-      bottom: 2vh;
-    }
-
-    /* リザルト画面 */
-    #resultScreen { padding: 3vh 4vw; gap: 2vh; }
-    .result-card { padding: 4vh 6vw; border-radius: 4vw; }
-    .result-emoji { font-size: 4rem; }
-    .result-title { font-size: 1.6rem; }
-    .result-score { font-size: 2.4rem; }
-    .result-msg { font-size: 0.9rem; }
-    .result-buttons { gap: 3vw; }
-    .result-btn { font-size: 0.9rem; padding: 1.2vh 4vw; }
-
-    /* モーダル（九九表）: スクロール可能に */
-    .modal { padding: 2vh 3vw; border-radius: 4vw; overflow-y: auto; max-height: 85vh; }
-    .kuku-cell { padding: 0.5vh 0.3vw; font-size: 0.75rem; }
-
-    /* 赤丸のサイズ調整 */
-    .big-maru .maru-svg-wrap { width: 38vh; height: 38vh; }
-    .big-maru .seikai-text { font-size: 1.2rem; }
-  }
-
-  /* ============ スマホ横向き対応 ============ */
-  @media (max-height: 480px) and (orientation: landscape) {
-    #mainScreen { padding: 0.5vh 1.5vw; gap: 0.5vh; }
-    .top-bar .pill { padding: 0.3vh 1.5vw; font-size: 0.72rem; }
-    .icon-btn { width: 30px; height: 30px; font-size: 0.85rem; }
-
-    .main-body {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5vw;
-    }
-    .calc-panel { flex: unset; min-height: unset; }
-    .controls { gap: 0.8vh; }
-
-    .step-panel { padding: 0.8vh 1.5vw; }
-    .panel-header { margin-bottom: 0.4vh; }
-    .panel-title { font-size: 0.75rem; }
-    .step-hint { display: none; }  /* 横向き狭い時は省略 */
-    .step-btn {
-      aspect-ratio: 1 / 0.7;
-      gap: 0;
-    }
-    .step-btn .step-icon { font-size: 1rem; }
-    .step-btn .step-label { font-size: 0.72rem; }
-
-    .numpad-panel { padding: 0.8vh 1.5vw; }
-    .num-btn { font-size: clamp(1.2rem, 4.5vw, 1.6rem); }
-    .numpad-grid { gap: 0.6vw; }
-
-    /* スマホ横向き: ヒントボタンを小さく */
-    .hint-btn-container {
-      top: 0.5vh;
-      right: 0.5vh;
-      padding: 0.4vh 1.2vw;
-      border-width: 2px;
-      border-radius: 1.5vw;
-      gap: 0;
-    }
-    .hint-btn-icon { font-size: 1rem; }
-    .hint-btn-label { font-size: 0.6rem; }
-
-    /* スマホ横向き: スキップボタンも小さく */
-    .skip-btn {
-      top: 0.5vh;
-      right: calc(0.5vh + 56px);
-      padding: 0.4vh 1.2vw;
-      font-size: 0.6rem;
-    }
+    #titleScreen { justify-content: flex-start; padding: 2.5vh 4vw; gap: 1.6vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .app-title { font-size: clamp(1.2rem, 6vw, 1.8rem); }
+    .level-grid { grid-template-columns: 1fr 1fr; gap: 2vw; width: 96vw; }
+    .level-card { min-height: 0; padding: 1.2vh 1.5vw; border-radius: 3vw; }
+    .main-body { display: flex; flex-direction: column; gap: 1vh; }
+    .calc-panel { flex: 0 0 46vh; min-height: 46vh; border-radius: 3vw; }
+    .controls { flex: 1; gap: 1vh; }
+    .step-btn .step-label { font-size: 0.8rem; }
+    .step-btn .step-sub { display: none; }
+    .num-btn { font-size: clamp(1.4rem, 6vw, 2rem); }
+    .hint-btn-container { top: 1vh; right: calc(1vh + 72px); padding: 0.7vh 2vw; }
+    .skip-btn { top: 1vh; right: 1vh; }
   }
 </style>
 </head>
 <body>
-
 <!-- ============ TITLE SCREEN ============ -->
 <div id="titleScreen" class="screen active">
   <div class="title-header">
-    <h1 class="app-title">わりざんの<span class="accent">ひっ算</span>れんしゅう</h1>
-    <p class="app-subtitle">〜 たてる ・ かける ・ ひく ・ おろす 〜</p>
+    <h1 class="app-title">わりざんの<span class="accent">ひっ算</span>れんしゅう<span class="badge2">Ⅱ</span></h1>
+    <p class="app-subtitle">〜 2けたで わる ・ ゆびかくしで けんとうを つける 〜</p>
+    <div class="version-badge"><span class="dot"></span>バージョン <span class="vnum" id="titleVersion">1.1.1</span></div>
   </div>
 
   <div>
@@ -1246,7 +664,6 @@
   <button class="start-btn" id="startBtn" disabled>はじめる →</button>
 </div>
 
-
 <!-- ============ MAIN SCREEN ============ -->
 <div id="mainScreen" class="screen">
   <div class="top-bar">
@@ -1256,6 +673,7 @@
       <div class="pill">もんだい <span class="num" id="qNumDisplay">1</span> / <span id="qTotalDisplay">5</span></div>
     </div>
     <div class="right">
+      <div class="pill version-pill">ver <span class="vnum" id="mainVersion">1.1.1</span></div>
       <div class="pill">⭕ <span class="num" id="correctDisplay">0</span></div>
     </div>
   </div>
@@ -1265,14 +683,16 @@
       <div class="calc-grid" id="calcGrid">
         <div class="division" id="division"></div>
       </div>
-      <!-- スキップボタン (ヒントボタンの左隣・控えめ) -->
+      <!-- 右側かけ算ワークスペース -->
+      <div class="mult-workspace" id="multWorkspace"></div>
+      <!-- スキップ -->
       <button class="skip-btn" id="skipBtn" title="この もんだいを スキップ">スキップ →</button>
-      <!-- ヒントボタン (計算スペース右上) -->
+      <!-- ヒント -->
       <button class="hint-btn-container" id="hintBtn" title="タップ:けいさんヒント / 長押し:くくひょう">
         <span class="hint-btn-icon">💡</span>
         <span class="hint-btn-label">ヒント</span>
       </button>
-      <!-- 大きな赤丸（正解時に表示） -->
+      <!-- 赤丸 -->
       <div class="big-maru" id="bigMaru" style="display:none;">
         <div class="maru-svg-wrap">
           <svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
@@ -1281,7 +701,6 @@
         </div>
         <div class="seikai-text">せいかい！</div>
       </div>
-      <!-- 次の問題へボタン -->
       <button class="next-q-btn" id="nextQBtn">つぎの もんだいへ →</button>
     </div>
 
@@ -1294,15 +713,23 @@
         <div class="step-grid" id="stepGrid">
           <button class="step-btn tateru" data-step="tateru">
             <span class="step-icon">⬆️</span><span class="step-label">たてる</span>
+            <span class="step-sub">けんとうを つける</span>
           </button>
           <button class="step-btn kakeru" data-step="kakeru">
             <span class="step-icon">✖️</span><span class="step-label">かける</span>
+            <span class="step-sub">みぎで ひっ算</span>
           </button>
           <button class="step-btn hiku" data-step="hiku">
             <span class="step-icon">➖</span><span class="step-label">ひく</span>
+            <span class="step-sub">ひけるかな?</span>
+          </button>
+          <button class="step-btn herasu" data-step="herasu">
+            <span class="step-icon">↩️</span><span class="step-label">へらす</span>
+            <span class="step-sub">しょうを 1へらす</span>
           </button>
           <button class="step-btn orosu" data-step="orosu">
             <span class="step-icon">⬇️</span><span class="step-label">おろす</span>
+            <span class="step-sub">つぎの くらい</span>
           </button>
         </div>
       </div>
@@ -1329,7 +756,6 @@
   </div>
 </div>
 
-
 <!-- ============ RESULT SCREEN ============ -->
 <div id="resultScreen" class="screen">
   <div class="confetti" id="confetti"></div>
@@ -1348,7 +774,6 @@
   </div>
 </div>
 
-
 <!-- ============ HINT MODAL ============ -->
 <div class="modal-overlay" id="hintModal">
   <div class="modal">
@@ -1359,427 +784,196 @@
   </div>
 </div>
 
-
-<!-- ============ CHALLENGE METHOD MODAL (チャレンジの解法えらび) ============ -->
-<div class="modal-overlay" id="methodModal">
-  <div class="modal method-modal">
-    <div class="modal-title"><span class="deco">★</span> といかた を えらぼう <span class="deco">★</span></div>
-    <p class="method-q">
-      「ひゃくのくらい」に しょうが たたない もんだいでは、<br>
-      ひゃくのくらいに「0」を たてて といていますか？
-    </p>
-    <div class="method-example">
-      <span class="method-example-label">れい</span>
-      <span class="method-example-yes">０２３ → 234 ÷ 5 …「0」をたてる</span>
-      <span class="method-example-vs">／</span>
-      <span class="method-example-no">_23 → 234 ÷ 5 …とばす</span>
-    </div>
-    <div class="method-btn-row">
-      <button class="method-btn yes" id="methodYesBtn">
-        <span class="method-btn-icon">⭕</span>
-        <span class="method-btn-label">はい</span>
-        <span class="method-btn-sub">0をたてる</span>
-      </button>
-      <button class="method-btn no" id="methodNoBtn">
-        <span class="method-btn-icon">➡️</span>
-        <span class="method-btn-label">いいえ</span>
-        <span class="method-btn-sub">とばす</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-
 <script>
 /* ============================================================
-   わりざんのひっ算アプリ - 改修版
+   わりざんのひっ算れんしゅうⅡ 〜2けたでわる〜
+   指隠し(切り捨て)で仮商 → かける(右に残す) → ひく(ひけなければ1へらす)
    ============================================================ */
 
-/* ---------- LEVEL DEFINITIONS (5段階) ---------- */
-/* ---------- LEVEL DEFINITIONS ----------
-   レベルの意図 (内部キー : 表示):
-   1 : レベル1   2桁÷1桁、あまりなし、商に0なし
-   2 : レベル2   2桁÷1桁、あまりあり、商に0なし
-   3 : レベル3   2桁÷1桁、商の一の位が0
-   4 : レベル4   3桁÷1桁、商が百の位から立つ、商に0なし
-   5 : レベル5   3桁÷1桁、商の十の位か一の位に0
-   6 : レベル6   3桁÷1桁、百の位に商が立たない(百の位を飛ばす解法)
-   7 : レベル6(0をたてる)  ↑と同条件だが百の位に0を立てて割り進める派生
-   8 : チャレンジ  レベル1〜6からミックス出題
-*/
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+/* アプリのバージョン(ここを変えると画面表示も変わる) */
+const APP_VERSION = '1.1.1';
+
+/* 十の位だけを見た切り捨て見当: 84÷23 → 8÷2 = 4 */
+function estimateQuotientDigit(partial, divisor) {
+  const dTens = Math.floor(divisor / 10);
+  const pMasked = Math.floor(partial / 10);
+  if (dTens === 0) return 1;
+  let est = Math.floor(pMasked / dTens);
+  if (est > 9) est = 9;
+  if (est < 1) est = 1;
+  return est;
+}
+
+/* ---------- LEVEL DEFINITIONS ---------- */
 const LEVELS = {
   1: {
-    title: 'レベル 1',
-    desc: '2けた÷1けた\nあまりなし',
-    fixed: [
-      [48, 2], [69, 3], [84, 4], [55, 5], [86, 2],
-      [96, 3], [88, 4], [77, 7], [66, 6], [99, 3]
-    ],
-    randomGen: () => {
-      // 2桁÷1桁、あまりなし、商の各桁が0でない (商は2桁)
-      while (true) {
-        const div = rand(2, 9);
-        const q1 = rand(1, 9);
-        const q2 = rand(1, 9);  // 一の位も0以外
-        const quotient = q1 * 10 + q2;
-        const dividend = quotient * div;
-        if (dividend >= 10 && dividend <= 99) return [dividend, div];
-      }
-    }
+    title: 'レベル 1', desc: '見当ぴったり\nわり切れる',
+    fixed: [[648,72],[118,59],[378,42],[396,44],[132,66],[265,53],[128,32],[328,82],[234,78],[720,90]],
+    randomGen: () => genByCond(a => a.divisor>=20 && Math.floor(a.divisor/10)>=2 && a.remainder===0 && a.maxCorr===0 && a.qDigits===1)
   },
   2: {
-    title: 'レベル 2',
-    desc: '2けた÷1けた\nあまりあり',
-    fixed: [
-      [47, 3], [65, 4], [83, 5], [76, 6], [59, 4],
-      [73, 5], [89, 7], [94, 8], [67, 3], [85, 6]
-    ],
-    randomGen: () => {
-      // 2桁÷1桁、あまりあり、商の各桁が0でない (商は2桁)
-      while (true) {
-        const div = rand(2, 9);
-        const dividend = rand(10, 99);
-        if (dividend % div === 0) continue;
-        const q = Math.floor(dividend / div);
-        if (q < 10) continue;            // 商が2桁
-        if (String(q).includes('0')) continue;  // 商に0が含まれない
-        return [dividend, div];
-      }
-    }
+    title: 'レベル 2', desc: '1かい へらす\nわり切れる',
+    fixed: [[125,25],[376,47],[184,23],[208,26],[180,36],[156,39],[245,49],[464,58],[175,25],[152,38]],
+    randomGen: () => genByCond(a => a.divisor>=20 && Math.floor(a.divisor/10)>=2 && a.remainder===0 && a.maxCorr===1 && a.qDigits===1)
   },
   3: {
-    title: 'レベル 3',
-    desc: '2けた÷1けた\n商の一の位が0',
-    fixed: [
-      // ▼ 前半5問: 被除数の一の位が「0以外」 (商の一の位は0)
-      [82, 4],   // 商20あまり2
-      [62, 3],   // 商20あまり2
-      [65, 6],   // 商10あまり5
-      [92, 3],   // 商30あまり2
-      [61, 2],   // 商30あまり1
-      // ▼ 後半5問: 被除数の一の位が「0」 (商の一の位も0)
-      [80, 4],   // 商20あまり0
-      [60, 3],   // 商20あまり0
-      [60, 6],   // 商10あまり0
-      [90, 3],   // 商30あまり0
-      [80, 2]    // 商40あまり0
-    ],
-    randomGen: () => {
-      // 2桁÷1桁、商の一の位が0、商は2桁(商10〜90で一の位=0)
-      // 被除数の一の位は0でも0以外でもOK (あまりあり・なし両方)
-      while (true) {
-        const div = rand(2, 9);
-        const q10 = rand(1, 9);              // 商の十の位
-        const quotient = q10 * 10;            // 一の位は0
-        const remainder = rand(0, div - 1);   // あまり0以上
-        const dividend = quotient * div + remainder;
-        if (dividend >= 10 && dividend <= 99) return [dividend, div];
-      }
-    }
+    title: 'レベル 3', desc: 'あまりが でる',
+    fixed: [[482,90],[418,87],[323,81],[345,48],[634,87],[181,31],[274,62],[556,82],[229,88],[375,64]],
+    randomGen: () => genByCond(a => a.divisor>=20 && Math.floor(a.divisor/10)>=2 && a.remainder>0 && a.maxCorr<=1 && a.qDigits===1)
   },
   4: {
-    title: 'レベル 4',
-    desc: '3けた÷1けた\n商が百の位から',
-    fixed: [
-      [648, 2], [846, 3], [963, 3], [884, 4], [555, 5],
-      [726, 3], [847, 4], [639, 3], [728, 2], [965, 5]
-    ],
-    randomGen: () => {
-      // 3桁÷1桁、商が百の位から立つ(商3桁)、商に0が含まれない
-      while (true) {
-        const div = rand(2, 9);
-        const dividend = rand(100, 999);
-        const firstDigit = Math.floor(dividend / 100);
-        if (firstDigit < div) continue;          // 商が3桁でない
-        const q = Math.floor(dividend / div);
-        if (q < 100) continue;                   // 念のため(商3桁)
-        if (String(q).includes('0')) continue;   // 商に0なし
-        return [dividend, div];
-      }
-    }
+    title: 'レベル 4', desc: 'しょうが 2けた\nおろす あり',
+    fixed: [[727,44],[681,60],[723,48],[639,20],[783,66],[624,54],[737,65],[678,21],[908,74],[867,76]],
+    randomGen: () => genByCond(a => a.divisor>=20 && Math.floor(a.divisor/10)>=2 && a.qDigits===2 && a.maxCorr<=1)
   },
   5: {
-    title: 'レベル 5',
-    desc: '3けた÷1けた\n商の途中に「0」',
-    fixed: [
-      [612, 3], [824, 4], [915, 3], [728, 7], [612, 6],
-      [824, 8], [515, 5], [618, 6], [725, 7], [402, 4]
-    ],
-    randomGen: () => {
-      // 3桁÷1桁、商3桁、商の十の位か一の位が0
-      while (true) {
-        const div = rand(2, 9);
-        const dividend = rand(100, 999);
-        const firstDigit = Math.floor(dividend / 100);
-        if (firstDigit < div) continue;
-        const q = Math.floor(dividend / div);
-        if (q < 100) continue;  // 商が3桁である必要
-        const qStr = String(q);
-        // 十の位か一の位に0があれば採用
-        if (qStr[1] === '0' || qStr[2] === '0') return [dividend, div];
-      }
-    }
+    title: 'レベル 5', desc: 'わる数 11〜19\nなんかい へらす',
+    badge: '5',
+    fixed: [[133,18],[134,16],[120,19],[84,16],[134,17],[31,15],[61,15],[45,14],[138,19],[111,15]],
+    randomGen: () => genByCond(a => Math.floor(a.divisor/10)===1 && a.divisor>=11 && a.divisor<=19 && a.qDigits===1 && a.maxCorr>=1)
   },
   6: {
-    title: 'レベル 6',
-    desc: '3けた÷1けた\n百の位に商が立たない',
-    badge: '6',
-    fixed: [
-      [234, 5], [156, 4], [378, 6], [245, 7], [128, 3],
-      [186, 8], [342, 9], [275, 6], [168, 7], [189, 4]
-    ],
-    randomGen: () => {
-      // 3桁÷1桁、百の位に商が立たない(=被除数の百の位 < divisor)、商は2桁
-      while (true) {
-        const div = rand(3, 9);
-        const dividend = rand(100, 999);
-        const firstDigit = Math.floor(dividend / 100);
-        if (firstDigit < div) return [dividend, div];
-      }
-    }
-  },
-  7: {
-    // レベル6の派生(0を立てるバージョン)。カードでは「6」バッジ＋サブ表記で
-    // レベル6の仲間だとわかるように見せる
-    title: 'レベル 6',
-    desc: '百の位に「0」を\nたてて すすむ',
-    badge: '6',
-    badgeSub: '0をたてる',   // バッジ下の小ラベル
-    variant: true,            // レベル6の派生であることを示す
-    leadingZero: true,        // 百の位から商0を立てて割り進める解法
-    fixed: [
-      [256, 4], [128, 3], [245, 7], [156, 4], [378, 6],
-      [186, 8], [168, 7], [275, 6], [342, 9], [234, 5]
-    ],
-    randomGen: () => {
-      // 3桁÷1桁、百の位に商が立たない(百の位 < divisor) → 百の位に0を立てる
-      while (true) {
-        const div = rand(3, 9);
-        const dividend = rand(100, 999);
-        const firstDigit = Math.floor(dividend / 100);
-        if (firstDigit < div) return [dividend, div];
-      }
-    }
-  },
-  8: {
-    // 総合チャレンジ: レベル1〜6の問題からミックス出題
-    title: 'チャレンジ',
-    desc: 'レベル1〜6\nいろいろな もんだい',
-    badge: '★',
-    isChallenge: true,
-    mixFrom: [1, 2, 3, 4, 5, 6],   // この6レベルから出題
-    fixed: null,                    // 動的生成のため未使用
-    randomGen: null
+    title: 'チャレンジ', desc: 'レベル1〜5\nいろいろ',
+    badge: '★', isChallenge: true, mixFrom: [1,2,3,4,5], fixed: null, randomGen: null
   }
 };
 
 const QUESTIONS_PER_LEVEL = 5;
 
-function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+/* ---------- PLAN BUILDER (指隠し + 修正ループ) ---------- */
+function stageTrials(partial, divisor) {
+  if (partial < divisor) {
+    return { estimate: 0, trials: [{q:0,product:0,canSub:true}], finalQ:0, product:0, remainder:partial, corrections:0, isZero:true };
+  }
+  let q = estimateQuotientDigit(partial, divisor);
+  const trials = [];
+  while (q >= 1) {
+    const product = q * divisor;
+    const canSub = product <= partial;
+    trials.push({ q, product, canSub });
+    if (canSub) break;
+    q--;
+  }
+  const f = trials[trials.length-1];
+  return { estimate: trials[0].q, trials, finalQ: f.q, product: f.product, remainder: partial - f.product, corrections: trials.length-1, isZero:false };
+}
+
+function buildPlan(dividend, divisor) {
+  const digits = String(dividend).split('').map(Number);
+  const n = digits.length;
+  let firstPos = -1, acc = 0;
+  for (let p = 0; p < n; p++) { acc = acc*10 + digits[p]; if (acc >= divisor) { firstPos = p; break; } }
+  if (firstPos === -1) firstPos = n - 1;
+
+  const stages = [];
+  let partial = 0;
+  for (let i = 0; i < n; i++) {
+    partial = partial*10 + digits[i];
+    if (i < firstPos) continue;
+    const st = stageTrials(partial, divisor);
+    // stage の各カラム開始位置(partial の左端)
+    const start = (i === firstPos) ? firstPos : i;
+    stages.push({ position: i, partial, partialStart: start, partialEnd: i, ...st });
+    partial = st.remainder;
+  }
+
+  // フラットな手順列を構築
+  // 各 stage: たてる(見当) → [かける → ひく → (ひけない: へらす → かける → ひく) ...] → おろす(次段があれば)
+  const steps = [];
+  stages.forEach((stage, sIdx) => {
+    stage.trials.forEach((tr, tIdx) => {
+      const isLastTrial = (tIdx === stage.trials.length - 1);
+      if (tIdx === 0) {
+        steps.push({ kind:'tateru', stageIdx:sIdx, position:stage.position, value: tr.q });
+      } else {
+        steps.push({ kind:'herasu', stageIdx:sIdx, position:stage.position, value: tr.q });
+      }
+      steps.push({ kind:'kakeru', stageIdx:sIdx, position:stage.position, value: tr.product, qForMult: tr.q, canSub: tr.canSub, trialIdx: tIdx });
+      steps.push({ kind:'hiku',   stageIdx:sIdx, position:stage.position, canSub: tr.canSub,
+                   value: tr.canSub ? stage.remainder : null, product: tr.product, partial: stage.partial });
+    });
+    // 次の段があれば おろす
+    if (sIdx < stages.length - 1) {
+      const nextStage = stages[sIdx+1];
+      steps.push({ kind:'orosu', stageIdx:sIdx, position:nextStage.position, value: digits[nextStage.position] });
+    }
+  });
+
+  return { dividend, divisor, digits, n, firstPos, stages, steps,
+           quotient: Math.floor(dividend/divisor), remainder: dividend % divisor };
+}
+
+/* ランダム生成: 条件を満たすまで試行 */
+function genByCond(cond) {
+  let guard = 0;
+  while (guard < 20000) {
+    guard++;
+    const divisor = rand(10, 99);
+    const dividend = rand(10, 999);
+    if (dividend < divisor) continue;
+    const a = analyzeForGen(dividend, divisor);
+    if (!a || a.anyZeroQ) continue;
+    if (cond(a)) return [dividend, divisor];
+  }
+  return [96, 32]; // フォールバック
+}
+function analyzeForGen(dividend, divisor) {
+  const plan = buildPlan(dividend, divisor);
+  let maxCorr = 0, anyZeroQ = false;
+  for (const s of plan.stages) {
+    if (s.finalQ === 0 || s.isZero) anyZeroQ = true;
+    maxCorr = Math.max(maxCorr, s.corrections);
+  }
+  return { dividend, divisor, remainder: plan.remainder, maxCorr, anyZeroQ, qDigits: String(plan.quotient).length };
+}
 
 /* ---------- GAME STATE ---------- */
 const state = {
-  level: null,
-  mode: 'fixed',
-  questions: [],
-  qIdx: 0,
-  correctCount: 0,
-  current: null,
-  challengeLeadingZero: false  // チャレンジ: レベル6相当を「0をたてる」解法で出すか
+  level: null, mode: 'fixed', questions: [], qIdx: 0, correctCount: 0, current: null
 };
 
-/* ---------- STEP COMPUTATION ---------- */
-function computeSteps(dividend, divisor, leadingZeroMode = false) {
-  const digits = String(dividend).split('').map(Number);
-  const n = digits.length;
-  const steps = [];
-
-  let firstQuotientPosition = -1;
-  if (leadingZeroMode) {
-    // レベル7: 百の位(先頭)から商0を立てて割り進める解法
-    // 先頭桁が割れなくてもスキップせず、position 0 から商0を立てる
-    firstQuotientPosition = 0;
-  } else {
-    let p = 0, acc = 0;
-    while (p < n) {
-      acc = acc * 10 + digits[p];
-      if (acc >= divisor) { firstQuotientPosition = p; break; }
-      p++;
-    }
-  }
-
-  let partial = 0;
-  for (let i = 0; i < n; i++) {
-    partial = partial * 10 + digits[i];
-    if (i < firstQuotientPosition) continue;
-
-    const q = Math.floor(partial / divisor);
-    const product = q * divisor;
-    const remainder = partial - product;
-
-    steps.push({ kind: 'tateru', position: i, value: q, partial, product, remainder });
-    steps.push({ kind: 'kakeru', position: i, value: product, partial, remainder });
-    steps.push({ kind: 'hiku',   position: i, value: remainder, partial });
-
-    if (i < n - 1) {
-      steps.push({ kind: 'orosu', position: i + 1, value: digits[i + 1], broughtDown: digits[i + 1] });
-      partial = remainder;
-    } else {
-      partial = remainder;
-    }
-  }
-
-  return { steps, firstQuotientPosition, digits, leadingZeroMode,
-           finalQuotient: Math.floor(dividend / divisor),
-           finalRemainder: dividend % divisor };
+/* ---------- CELL SIZE ---------- */
+/* パネルを「左:わり算のひっ算」「右:かけ算の縦ひっ算」に分ける。
+   かけ算ひっ算は 4カラム(×+3桁) + 「✗ひけない」ノート ぶんの幅が要る。 */
+function getWorkspaceWidth(cell, divisor) {
+  // 4カラム(×と3桁) + ノート約3.2マス
+  return cell * 4 + cell * 3.2;
 }
-
-function buildPlan(dividend, divisor, leadingZeroMode = false) {
-  const result = computeSteps(dividend, divisor, leadingZeroMode);
-  const { steps, firstQuotientPosition, digits } = result;
-
-  const activeStages = [];
-  for (const s of steps) {
-    if (s.kind === 'tateru' && !activeStages.includes(s.position)) activeStages.push(s.position);
-  }
-
-  const stageData = {};
-  for (const pos of activeStages) {
-    stageData[pos] = { product: 0, remainder: 0, partialStart: 0, partialEnd: 0 };
-  }
-
-  let partial = 0;
-  for (let i = 0; i < digits.length; i++) {
-    partial = partial * 10 + digits[i];
-    if (i < firstQuotientPosition) continue;
-    const q = Math.floor(partial / divisor);
-    const product = q * divisor;
-    const remainder = partial - product;
-    const start = (i === firstQuotientPosition) ? 0 : i;
-    stageData[i].product = product;
-    stageData[i].remainder = remainder;
-    stageData[i].partialStart = start;
-    stageData[i].partialEnd = i;
-    partial = remainder;
-  }
-
-  return { ...result, steps, activeStages, stageData, n: digits.length };
-}
-
-/* ============================================================
-   GRID LAYOUT
-   方眼ノートのマス単位で座標を扱う:
-   - col: 列 (0始まり、左から右)
-   - row: 行 (0始まり、上から下)
-   ÷の構造:
-     row 0: 商
-     row 1: わる数 ) | わられる数...
-     row 2: かける結果（積）
-     [横線]
-     row 3: ひいた結果（あまり）+ おろされた数字
-     row 4: 次の積
-     [横線]
-     row 5: 次のあまり ...
-
-   各ステージは 2行(積→残り) を消費。
-   おろす時は、ひいた結果の右隣に数字を配置する。
-   ============================================================ */
 
 function getCellSize() {
   const panel = document.getElementById('calcPanel');
-  const w = panel.clientWidth  || window.innerWidth  * 0.45;
+  const w = panel.clientWidth  || window.innerWidth * 0.5;
   const h = panel.clientHeight || window.innerHeight * 0.4;
-
-  // 実際の問題の行数・列数に合わせてマスを最大化する。
-  // (2桁問題は3桁問題より行・列が少ないので、その分マスを大きくできる)
-  let rows = 8;   // フォールバック(3桁・2ステージ想定)
-  let cols = 5;   // フォールバック(わる数 + 3桁 + 余白)
+  let rows = 8, cols = 5;
   const c = state.current;
+  let divisor = 25;
   if (c && c.plan) {
     const n = c.n;
-    const stages = c.plan.activeStages.length;
-    rows = 2 + stages * 2;   // 商行 + わられる数行 + 各ステージ2行
-    cols = n + 1;            // わる数1列 + わられる数n列
+    rows = 2 + c.plan.stages.length * 2;
+    cols = String(c.divisor).length + n + 1; // わる数桁 + ブラケット余白 + わられる数
+    divisor = c.divisor;
   }
-  // 余白ぶんを少し足してから割る (縦は上下、横は左右＋あまりタグ用)
   const candH = Math.floor(h / (rows + 1.2));
-  const candW = Math.floor(w / (cols + 1.5));
-  // タブレット/PCでは大きめのマスを許容 (上限を引き上げ)
-  return Math.max(34, Math.min(candH, candW, 130));
+  // 横: パネル幅から「かけ算メモ幅」を引いた残りにひっ算を収める。
+  // メモ幅は cell 依存なので、cell を仮定して2回イテレートする。
+  let cell = Math.min(candH, 100);
+  for (let iter = 0; iter < 3; iter++) {
+    const wsW = getWorkspaceWidth(cell, divisor);
+    const availW = w - wsW - w * 0.05;   // 左右の余白
+    const candW = Math.floor(availW / cols);
+    cell = Math.max(28, Math.min(candH, candW, 100));
+  }
+  return cell;
 }
 
-/* ---------- DOMスナップショット & 復元 ----------
-   リサイズ時に DOM を再構築しても入力済み内容を保持するため、
-   現在の表示状態を捕捉して、再描画後に再適用する */
-function captureDivisionSnapshot() {
-  const c = state.current;
-  if (!c) return null;
-  const snap = { cells: {}, sublines: {}, hasRemainderTag: false };
-
-  // 各セルの内容を捕捉
-  const ids = [];
-  for (let i = 0; i < c.n; i++) {
-    ids.push(`q-${i}`, `d-${i}`);
-  }
-  for (const stagePos of c.plan.activeStages) {
-    for (let i = 0; i < c.n; i++) {
-      ids.push(`p-${stagePos}-${i}`, `r-${stagePos}-${i}`);
-    }
-  }
-  for (const id of ids) {
-    const el = document.getElementById(id);
-    if (el) {
-      snap.cells[id] = {
-        text: el.textContent,
-        faded: el.classList.contains('faded'),
-        leadZero: el.classList.contains('lead-zero'),
-        struck: el.classList.contains('struck')
-      };
-    }
-  }
-
-  // sublineの表示状態
-  for (const stagePos of c.plan.activeStages) {
-    const sl = document.getElementById(`subline-${stagePos}`);
-    if (sl) snap.sublines[stagePos] = sl.style.display;
-  }
-
-  // あまりタグの有無
-  const tag = document.querySelector('#division .remainder-tag');
-  snap.hasRemainderTag = !!tag;
-
-  return snap;
-}
-
-function applyDivisionSnapshot(snap) {
-  if (!snap) return;
-  // 各セルの内容を復元
-  for (const id in snap.cells) {
-    const el = document.getElementById(id);
-    if (el) {
-      el.textContent = snap.cells[id].text;
-      if (snap.cells[id].faded) el.classList.add('faded');
-      if (snap.cells[id].leadZero) el.classList.add('lead-zero');
-      if (snap.cells[id].struck) el.classList.add('struck');
-    }
-  }
-  // subline
-  for (const stagePos in snap.sublines) {
-    const sl = document.getElementById(`subline-${stagePos}`);
-    if (sl) sl.style.display = snap.sublines[stagePos];
-  }
-  // あまりタグ
-  if (snap.hasRemainderTag) {
-    // showRemainderTag を再実行
-    showRemainderTag();
-  }
-}
-
+/* ---------- RENDER DIVISION ---------- */
 function renderDivision() {
   const c = state.current;
   const plan = c.plan;
   const { divisor, digits, n } = c;
-  const activeStages = plan.activeStages;
+  const stages = plan.stages;
 
   const cell = getCellSize();
   document.documentElement.style.setProperty('--cell', cell + 'px');
@@ -1788,37 +982,35 @@ function renderDivision() {
   const div = document.getElementById('division');
   div.innerHTML = '';
 
-  const DIVISOR_COL = 0;
-  const FIRST_DIGIT_COL = 1;  // わる数のすぐ右隣に配置 (空列なし)
+  const DIVISOR_START_COL = 0;      // わる数は2桁なので col 0..? 実際は右詰めで配置
+  const FIRST_DIGIT_COL = 2;        // わる数(2桁) の右、ブラケットの右隣
   const QUOTIENT_ROW = 0;
   const DIVIDEND_ROW = 1;
 
-  const totalCols = n + 1;  // col=0:divisor, col=1..n:digits
-  const totalRows = 2 + activeStages.length * 2;
+  // わる数は2桁 → col0,col1 に配置。ブラケットは col2 の左端。わられる数は col2 から
+  const dvStr = String(divisor);
+  const dvLen = dvStr.length; // 2
 
+  const totalCols = dvLen + n + 1;
+  const totalRows = 2 + stages.length * 2;
   const divWidth = totalCols * cell;
   const divHeight = totalRows * cell;
 
-  // panelのサイズを取得して、divisionをマス単位にスナップして中央寄せ
-  const pw = panel.clientWidth;
-  const ph = panel.clientHeight;
-  // 中央位置を計算してから、cell単位に丸める
-  const rawLeft = (pw - divWidth) / 2;
+  const pw = panel.clientWidth, ph = panel.clientHeight;
+  // ひっ算は左に寄せる(右にかけ算メモの領域を確保)。上下は中央。
+  const leftMargin = Math.max(cell * 0.3, pw * 0.035);
+  const snapLeft = Math.round(leftMargin / cell) * cell + Math.round(cell*0.2);
   const rawTop  = (ph - divHeight) / 2;
-  const snapLeft = Math.round(rawLeft / cell) * cell;
-  const snapTop  = Math.round(rawTop  / cell) * cell;
+  const snapTop  = Math.max(0, Math.round(rawTop / cell) * cell);
 
   div.style.width  = divWidth + 'px';
   div.style.height = divHeight + 'px';
   div.style.left = snapLeft + 'px';
   div.style.top  = snapTop + 'px';
 
-  // 背景の方眼パターンを division の位置に合わせる
-  // (panel全体に方眼を描画するが、divisionと完全に同期させる)
   document.documentElement.style.setProperty('--gx', snapLeft + 'px');
   document.documentElement.style.setProperty('--gy', snapTop + 'px');
 
-  // ヘルパー
   function placeCell(col, row, content, opts = {}) {
     const el = document.createElement('div');
     el.className = 'cell';
@@ -1840,349 +1032,273 @@ function renderDivision() {
     return el;
   }
 
-  // 1. わる数 (col=0, row=1)
-  const divisorEl = document.createElement('div');
-  divisorEl.className = 'divisor-cell';
-  divisorEl.style.left = (DIVISOR_COL * cell) + 'px';
-  divisorEl.style.top  = (DIVIDEND_ROW * cell) + 'px';
-  divisorEl.textContent = divisor;
-  div.appendChild(divisorEl);
+  // わる数(2桁) を col 0,1 に配置
+  for (let i = 0; i < dvLen; i++) {
+    const el = document.createElement('div');
+    el.className = 'divisor-cell';
+    el.id = `divisor-${i}`;
+    el.style.left = (i * cell) + 'px';
+    el.style.top  = (DIVIDEND_ROW * cell) + 'px';
+    el.textContent = dvStr[i];
+    div.appendChild(el);
+  }
 
-  // 2. ブラケット ")" の縦線
-  // 重要: マス境界線上(col 0と col 1の境界=cell*1の位置)に配置
+  // ブラケット )
   const bracket = document.createElement('div');
   bracket.className = 'bracket-line';
-  bracket.style.left = (cell * 1) + 'px';
-  bracket.style.transform = 'translateX(-50%)';  // 境界線上に中央配置
+  bracket.style.left = (cell * FIRST_DIGIT_COL) + 'px';
+  bracket.style.transform = 'translateX(-50%)';
   bracket.style.top  = (DIVIDEND_ROW * cell + cell * 0.1) + 'px';
   bracket.style.height = (cell * 0.8) + 'px';
   div.appendChild(bracket);
 
-  // 3. 上の横線 (商の下) - col=1の左端から digit n本分
+  // 上線
   const topBar = document.createElement('div');
   topBar.className = 'top-bar-line';
-  topBar.style.left  = (cell * 1) + 'px';
+  topBar.style.left  = (cell * FIRST_DIGIT_COL) + 'px';
   topBar.style.top   = (DIVIDEND_ROW * cell) + 'px';
   topBar.style.width = (cell * n) + 'px';
   div.appendChild(topBar);
 
-  // 4. わられる数 (digits) を row=1 に配置
+  // わられる数
   for (let i = 0; i < n; i++) {
     placeCell(FIRST_DIGIT_COL + i, DIVIDEND_ROW, digits[i], { id: `d-${i}` });
   }
-
-  // 5. 商の空マス (row=0)
+  // 商の空マス
   for (let i = 0; i < n; i++) {
     placeEmpty(FIRST_DIGIT_COL + i, QUOTIENT_ROW, `q-${i}`);
   }
 
-  // 6. 各ステージの 積行 / 残り行 を配置
-  activeStages.forEach((stagePos, stageIdx) => {
+  // 各段の 積行 / あまり行
+  stages.forEach((stage, stageIdx) => {
     const productRow   = 2 + stageIdx * 2;
     const remainderRow = 3 + stageIdx * 2;
-
-    // 積行の各カラムに空セルを配置
     for (let i = 0; i < n; i++) {
-      placeEmpty(FIRST_DIGIT_COL + i, productRow, `p-${stagePos}-${i}`);
+      placeEmpty(FIRST_DIGIT_COL + i, productRow, `p-${stage.position}-${i}`);
+      placeEmpty(FIRST_DIGIT_COL + i, remainderRow, `r-${stage.position}-${i}`);
     }
-    // 残り行の各カラムに空セルを配置（ここに「あまり」と「おろした数字」が並ぶ）
-    for (let i = 0; i < n; i++) {
-      placeEmpty(FIRST_DIGIT_COL + i, remainderRow, `r-${stagePos}-${i}`);
-    }
-
-    // 積行と残り行の間の横線（後で表示）
     const subLine = document.createElement('div');
     subLine.className = 'sub-line';
-    subLine.id = `subline-${stagePos}`;
+    subLine.id = `subline-${stage.position}`;
     subLine.style.left  = (FIRST_DIGIT_COL * cell) + 'px';
     subLine.style.top   = ((productRow + 1) * cell) + 'px';
     subLine.style.width = (n * cell) + 'px';
     subLine.style.display = 'none';
     div.appendChild(subLine);
   });
+
+  // かけ算ワークスペースの位置を設定
+  positionMultWorkspace(snapLeft + divWidth, snapTop, cell);
 }
 
-/* ---------- SPOTLIGHT ---------- */
+/* かけ算ワークスペースを筆算の右側の予約領域に配置(背景グリッドに整列) */
+function positionMultWorkspace(rightX, topY, cell) {
+  const ws = document.getElementById('multWorkspace');
+  const panel = document.getElementById('calcPanel');
+  const pw = panel.clientWidth, ph = panel.clientHeight;
+  const gx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gx')) || 0;
+  const gy = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gy')) || 0;
+  // 筆算の右に1マスあけて、背景グリッドの線に合わせて左端を決める
+  let left = rightX + cell * 0.9;
+  // gx を基準にセル単位でスナップ
+  left = gx + Math.round((left - gx) / cell) * cell;
+  const wsW = getWorkspaceWidth(cell, state.current ? state.current.divisor : 25);
+  const maxLeft = pw - wsW;
+  if (left > maxLeft) left = gx + Math.floor((Math.max(rightX + cell*0.3, maxLeft) - gx) / cell) * cell;
+  if (left < rightX + cell*0.2) left = rightX + cell*0.2;
+  // 上端も背景グリッドに合わせる(タイトルはこの上、ひっ算は行単位)
+  let top = topY;
+  top = gy + Math.round((top - gy) / cell) * cell;
+  ws.style.left = left + 'px';
+  ws.style.top  = top + 'px';
+  ws.style.width = (pw - left) + 'px';
+  ws.style.height = (ph - top) + 'px';
+  ws.style.overflow = 'hidden';
+}
+
+/* ---------- MASKING (指隠し) ---------- */
+function setupMaskingForTateru(step) {
+  // わる数の一の位・わられる数(partial)の一の位を「隠せる」状態にする
+  const c = state.current;
+  const stage = c.plan.stages[step.stageIdx];
+  clearMaskables();
+
+  // わる数の一の位(最後の桁)
+  const dvLen = String(c.divisor).length;
+  const divOnes = document.getElementById(`divisor-${dvLen-1}`);
+  if (divOnes) makeMaskable(divOnes, 'divisor');
+
+  // partial の一の位 = partialEnd 列のセル
+  // 初段: わられる数の d-列。2段目以降: 前段の あまり行 / おろした数
+  const onesCol = stage.partialEnd;
+  let onesId;
+  if (step.stageIdx === 0) {
+    onesId = `d-${onesCol}`;
+  } else {
+    const prevStage = c.plan.stages[step.stageIdx - 1];
+    onesId = `r-${prevStage.position}-${onesCol}`;
+  }
+  const pOnes = document.getElementById(onesId);
+  if (pOnes) makeMaskable(pOnes, 'partial');
+
+  // 十の位を強調(青)
+  highlightTens(step);
+}
+
+function highlightTens(step) {
+  const c = state.current;
+  const stage = c.plan.stages[step.stageIdx];
+  const dvLen = String(c.divisor).length;
+  // わる数の十の位
+  const divTens = document.getElementById(`divisor-${dvLen-2}`);
+  if (divTens) divTens.classList.add('tens-focus');
+  // partial の十の位(一の位の左隣)
+  const tensCol = stage.partialEnd - 1;
+  if (tensCol >= stage.partialStart) {
+    let tensId;
+    if (step.stageIdx === 0) tensId = `d-${tensCol}`;
+    else {
+      const prevStage = c.plan.stages[step.stageIdx - 1];
+      tensId = `r-${prevStage.position}-${tensCol}`;
+    }
+    const el = document.getElementById(tensId);
+    if (el && el.textContent !== '') el.classList.add('tens-focus');
+  }
+}
+
+function makeMaskable(cellEl, type) {
+  cellEl.classList.add('maskable');
+  cellEl.dataset.maskType = type;
+  cellEl.onclick = () => toggleMask(cellEl);
+}
+function toggleMask(cellEl) {
+  const c = state.current;
+  if (cellEl.dataset.masked === '1') {
+    // 戻す
+    const cover = document.getElementById('mask-' + cellEl.id);
+    if (cover) cover.remove();
+    cellEl.dataset.masked = '';
+  } else {
+    // 隠す
+    const cell = getCellSize();
+    const cover = document.createElement('div');
+    cover.className = 'mask-cover';
+    cover.id = 'mask-' + cellEl.id;
+    cover.style.left = cellEl.style.left;
+    cover.style.top  = cellEl.style.top;
+    cover.style.width = cell + 'px';
+    cover.style.height = cell + 'px';
+    cover.onclick = (e) => { e.stopPropagation(); toggleMask(cellEl); };
+    document.getElementById('division').appendChild(cover);
+    cellEl.dataset.masked = '1';
+    if (navigator.vibrate) navigator.vibrate(15);
+  }
+}
+function clearMaskables() {
+  document.querySelectorAll('.cell.maskable, .divisor-cell.maskable').forEach(el => {
+    el.classList.remove('maskable');
+    el.onclick = null;
+    el.dataset.maskType = '';
+  });
+  document.querySelectorAll('.tens-focus').forEach(el => el.classList.remove('tens-focus'));
+}
+function clearAllMasks() {
+  document.querySelectorAll('.mask-cover').forEach(el => el.remove());
+  document.querySelectorAll('[data-masked="1"]').forEach(el => el.dataset.masked = '');
+  clearMaskables();
+}
+
+/* ---------- SPOTLIGHT / HINT ---------- */
 function clearSpotlight() {
   document.querySelectorAll('.cell.spot').forEach(c => c.classList.remove('spot'));
   clearHints();
 }
-
-/* ---------- HINT (固定モード時の計算ソース表示) ---------- */
 function clearHints() {
-  // hint-source クラスを削除
   document.querySelectorAll('.hint-source').forEach(c => c.classList.remove('hint-source'));
-  // 演算記号ヒントを削除
   document.querySelectorAll('.op-hint').forEach(el => el.remove());
 }
 
-/* 計算に使う数字をヒント表示する
-   step.kind に応じて、計算ソースとなるセルに hint-source クラスを付与し、
-   間に演算記号(÷ × -)を配置する
-   表示条件:
-   - ランダムモードでは出さない
-   - 固定モードでは:
-     - 1〜3問目: 常に表示
-     - 4〜5問目: hintRequested フラグが true のときのみ表示 */
+function spotlightForStep(step) {
+  clearSpotlight();
+  const c = state.current;
+  const plan = c.plan;
+  const stage = plan.stages[step.stageIdx];
+  if (!step) return;
+
+  if (step.kind === 'tateru' || step.kind === 'herasu') {
+    const q = document.getElementById(`q-${step.position}`);
+    if (q) q.classList.add('spot');
+  }
+  else if (step.kind === 'kakeru') {
+    // 積を書くマス(あまり行の上の積行) は使わず、右のワークスペースに書くため
+    // 商マスを軽く示す
+    const q = document.getElementById(`q-${step.position}`);
+    if (q) q.classList.add('spot');
+  }
+  else if (step.kind === 'hiku') {
+    if (step.canSub) {
+      const remLen = String(stage.remainder).length || 1;
+      const startCol = stage.partialEnd - remLen + 1;
+      for (let i = Math.max(stage.partialStart, startCol); i <= stage.partialEnd; i++) {
+        const cc = document.getElementById(`r-${step.position}-${i}`);
+        if (cc) cc.classList.add('spot');
+      }
+    }
+  }
+  else if (step.kind === 'orosu') {
+    const prevStage = [...plan.stages].filter(s => s.position < step.position).pop();
+    if (prevStage) {
+      const cc = document.getElementById(`r-${prevStage.position}-${step.position}`);
+      if (cc) cc.classList.add('spot');
+    }
+  }
+}
+
+/* 計算ヒント(緑パルス) */
 function showHintForStep(step) {
   clearHints();
   if (state.mode === 'random') return;
   if (!step) return;
-
-  // 4〜5問目はヒント要求されたときのみ表示
   const qNum = state.qIdx + 1;
   const autoShow = (qNum <= 3);
   if (!autoShow && !state.current.hintRequested) return;
 
   const c = state.current;
-  const plan = c.plan;
-  const stage = plan.stageData[step.position];
-  const cell = getCellSize();
+  const stage = c.plan.stages[step.stageIdx];
 
-  // 該当ステップで計算に使う「左側ソース」のセルIDリストと「右側ソース」を返すヘルパー
-  function highlight(ids) {
-    ids.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('hint-source');
-    });
-  }
-
-  // 2つのセル(またはセルグループ)の間に演算記号を配置する
-  // leftIds と rightIds の中央の中間位置に op-hint を置く
-  function placeOpHint(leftIds, rightIds, opSymbol) {
-    const div = document.getElementById('division');
-    if (!div) return;
-    const allIds = [...leftIds, ...rightIds];
-    if (allIds.length === 0) return;
-
-    // 各セルの位置(left+width/2, top+height/2)を取得
-    const positions = allIds.map(id => {
-      const el = document.getElementById(id);
-      if (!el) return null;
-      // 数値で取得 (例: '75px' → 75)
-      const l = parseFloat(el.style.left) || 0;
-      const t = parseFloat(el.style.top) || 0;
-      return { l: l + cell / 2, t: t + cell / 2 };
-    }).filter(p => p);
-
-    if (positions.length < 2) return;
-
-    // 左ソースの右端 と 右ソースの左端 の中間に配置
-    const leftPositions = leftIds.map(id => {
-      const el = document.getElementById(id);
-      return el ? parseFloat(el.style.left) + cell : null;
-    }).filter(v => v !== null);
-    const rightPositions = rightIds.map(id => {
-      const el = document.getElementById(id);
-      return el ? parseFloat(el.style.left) : null;
-    }).filter(v => v !== null);
-
-    if (leftPositions.length === 0 || rightPositions.length === 0) return;
-
-    const leftEdge = Math.max(...leftPositions);
-    const rightEdge = Math.min(...rightPositions);
-    const centerX = (leftEdge + rightEdge) / 2;
-
-    // 縦位置は左右ソースの中心の平均
-    const allTops = positions.map(p => p.t);
-    const centerY = allTops.reduce((a, b) => a + b, 0) / allTops.length;
-
-    const opSize = cell * 0.55;
-    const op = document.createElement('div');
-    op.className = 'op-hint';
-    op.style.left = (centerX - opSize / 2) + 'px';
-    op.style.top  = (centerY - opSize / 2) + 'px';
-    op.textContent = opSymbol;
-    div.appendChild(op);
-  }
-
-  if (step.kind === 'tateru') {
-    // 「○ ÷ ◇ は…?」: partial の数字 と divisor を強調
-    const partialIds = getPartialCellIds(step.position);
-    const divisorEl = document.querySelector('.divisor-cell');
-    if (divisorEl) divisorEl.classList.add('hint-source');
-    highlight(partialIds);
-    // ÷ 記号を divisor の左上に配置 (数字には被らない)
-    placeOpHintAtDivisorCorner('÷');
-  }
-  else if (step.kind === 'kakeru') {
-    // 「○ × ◇ は…?」: 商の今立てた数字 と divisor を強調
-    const qId = `q-${step.position}`;
-    const qEl = document.getElementById(qId);
+  if (step.kind === 'kakeru') {
+    // 商マス × わる数
+    const qEl = document.getElementById(`q-${step.position}`);
     if (qEl) qEl.classList.add('hint-source');
-    const divisorEl = document.querySelector('.divisor-cell');
-    if (divisorEl) divisorEl.classList.add('hint-source');
-    // × 記号を 商マス と divisor の間に置く
-    // ただし商マスは row=0, divisorは row=1 なので、両者を結ぶ位置(対角線の中点)に
-    placeOpHintBetweenCells(qId, null, '×', { useDivisor: true });
+    document.querySelectorAll('.divisor-cell').forEach(el => el.classList.add('hint-source'));
   }
-  else if (step.kind === 'hiku') {
-    // 「○ - ◇ は…?」: partial と product を強調
-    const partialIds = getPartialCellIds(step.position);
-    const prodLen = String(stage.product).length;
-    const prodStartCol = stage.partialEnd - prodLen + 1;
-    const prodIds = [];
-    for (let i = prodStartCol; i <= stage.partialEnd; i++) {
-      prodIds.push(`p-${step.position}-${i}`);
-    }
-    highlight(partialIds);
-    highlight(prodIds);
-    // − 記号を product 行の左隣マスに配置 (教科書通りの位置)
-    placeOpHintLeftOfProduct(prodIds, '−');
+  else if (step.kind === 'hiku' && step.canSub) {
+    // partial と product(右のかけ算結果)を示す。partial セルを強調
+    const ids = getPartialCellIds(step.stageIdx);
+    ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hint-source'); });
   }
-  // orosu はヒント不要(既存のドロップアニメで十分)
 }
 
-/* 与えられた position に対する partial を構成するセルIDリストを返す
-   - 初回ステージ: dividend digits の partialStart..partialEnd
-   - 2回目以降: 前ステージの remainder 行で数字が表示されているセル全て */
-function getPartialCellIds(position) {
+function getPartialCellIds(stageIdx) {
   const c = state.current;
-  const plan = c.plan;
-  const stage = plan.stageData[position];
-  const stageIdx = plan.activeStages.indexOf(position);
+  const stage = c.plan.stages[stageIdx];
   const ids = [];
   if (stageIdx === 0) {
-    for (let i = stage.partialStart; i <= stage.partialEnd; i++) {
-      ids.push(`d-${i}`);
-    }
+    for (let i = stage.partialStart; i <= stage.partialEnd; i++) ids.push(`d-${i}`);
   } else {
-    const prevStage = plan.activeStages[stageIdx - 1];
+    const prevStage = c.plan.stages[stageIdx - 1];
     for (let i = 0; i < c.n; i++) {
-      const el = document.getElementById(`r-${prevStage}-${i}`);
+      const el = document.getElementById(`r-${prevStage.position}-${i}`);
       if (!el || el.textContent === '') continue;
-      // 薄字(faded)の0はpartialの計算には意味があるが、視覚的にはノイズになるので
-      // hint-source対象から除外する (例: 「09÷3」と見えて混乱するのを防ぐ)
       if (el.classList.contains('faded')) continue;
-      ids.push(`r-${prevStage}-${i}`);
+      ids.push(`r-${prevStage.position}-${i}`);
     }
   }
   return ids;
 }
 
-/* ÷ 記号を divisor の真下(空きマス)に配置 (数字に被らない) */
-function placeOpHintAtDivisorCorner(opSymbol) {
-  const div = document.getElementById('division');
-  const divisorEl = document.querySelector('.divisor-cell');
-  if (!div || !divisorEl) return;
-  const cell = getCellSize();
-
-  const dLeft = parseFloat(divisorEl.style.left);
-  const dTop  = parseFloat(divisorEl.style.top);
-
-  // 配置: divisor のちょうど真下のマス(空き)に置く
-  // divisorは col=0, row=1 → その真下(col=0, row=2)は積行の左端で空きスペース
-  const opSize = cell * 0.55;
-  const cx = dLeft + cell / 2;        // divisorと同じ列の中央
-  const cy = dTop + cell + cell / 2;  // 1マス下の中央
-
-  const op = document.createElement('div');
-  op.className = 'op-hint';
-  op.style.left = (cx - opSize / 2) + 'px';
-  op.style.top  = (cy - opSize / 2) + 'px';
-  op.textContent = opSymbol;
-  div.appendChild(op);
-}
-
-/* − 記号を product 行の左隣マスに配置 (算数教科書通り) */
-function placeOpHintLeftOfProduct(prodIds, opSymbol) {
-  const div = document.getElementById('division');
-  if (!div || prodIds.length === 0) return;
-  const cell = getCellSize();
-
-  // product の最左セルの位置を取得
-  const leftMostId = prodIds[0]; // prodIdsは左から右の順
-  const el = document.getElementById(leftMostId);
-  if (!el) return;
-  const pLeft = parseFloat(el.style.left);
-  const pTop  = parseFloat(el.style.top);
-
-  // product 行の1マス左の中央に配置
-  // ただしバッジサイズはcell*0.55なので、マス中央に来るよう調整
-  const opSize = cell * 0.55;
-  const cx = pLeft - cell / 2;      // 左隣マスの中央
-  const cy = pTop + cell / 2;       // product行の中央高さ
-
-  const op = document.createElement('div');
-  op.className = 'op-hint';
-  op.style.left = (cx - opSize / 2) + 'px';
-  op.style.top  = (cy - opSize / 2) + 'px';
-  op.textContent = opSymbol;
-  div.appendChild(op);
-}
-
-/* 商マス (q-X) と divisor を結ぶ位置に演算記号を配置 (× 用) */
-function placeOpHintBetweenCells(qId, _unused, opSymbol, opts) {
-  const div = document.getElementById('division');
-  const qEl = document.getElementById(qId);
-  const divisorEl = document.querySelector('.divisor-cell');
-  if (!div || !qEl || !divisorEl) return;
-  const cell = getCellSize();
-
-  const qLeft = parseFloat(qEl.style.left);
-  const qTop  = parseFloat(qEl.style.top);
-  const dLeft = parseFloat(divisorEl.style.left);
-  const dTop  = parseFloat(divisorEl.style.top);
-
-  // 中点
-  const cx = (qLeft + cell / 2 + dLeft + cell / 2) / 2;
-  const cy = (qTop + cell / 2 + dTop + cell / 2) / 2;
-
-  const opSize = cell * 0.55;
-  const op = document.createElement('div');
-  op.className = 'op-hint';
-  op.style.left = (cx - opSize / 2) + 'px';
-  op.style.top  = (cy - opSize / 2) + 'px';
-  op.textContent = opSymbol;
-  div.appendChild(op);
-}
-
-function spotlightForStep(step) {
-  clearSpotlight();
-  const plan = state.current.plan;
-  if (!step) return;
-  const stage = plan.stageData[step.position];
-
-  // ※ 黄色のスポットは「答えを書く場所」のみに付ける
-  //   (計算ソースは緑のパルスで showHintForStep が表示する)
-
-  if (step.kind === 'tateru') {
-    // 答えを書く場所 = 商マスのみ
-    const q = document.getElementById(`q-${step.position}`);
-    if (q) q.classList.add('spot');
-  }
-  else if (step.kind === 'kakeru') {
-    // 答えを書く場所 = 積を書くマス
-    const prodLen = String(stage.product).length;
-    const startCol = stage.partialEnd - prodLen + 1;
-    for (let i = startCol; i <= stage.partialEnd; i++) {
-      const c = document.getElementById(`p-${step.position}-${i}`);
-      if (c) c.classList.add('spot');
-    }
-  }
-  else if (step.kind === 'hiku') {
-    // 答えを書く場所 = ひいた結果を書くマス
-    const remLen = String(stage.remainder).length || 1;
-    const startCol = stage.partialEnd - remLen + 1;
-    for (let i = startCol; i <= stage.partialEnd; i++) {
-      const c = document.getElementById(`r-${step.position}-${i}`);
-      if (c) c.classList.add('spot');
-    }
-  }
-  else if (step.kind === 'orosu') {
-    // 答えを書く場所 = おろした数字を書くマス (前のステージのremainder行の該当列)
-    const prevActive = [...plan.activeStages].filter(p => p < step.position).pop();
-    if (prevActive !== undefined) {
-      const c = document.getElementById(`r-${prevActive}-${step.position}`);
-      if (c) c.classList.add('spot');
-    }
-  }
-}
-
 /* ---------- STEP HINT TEXT ---------- */
-const STEP_NAMES_JA = {
-  tateru: 'たてる', kakeru: 'かける', hiku: 'ひく', orosu: 'おろす'
-};
+const STEP_NAMES_JA = { tateru:'たてる', kakeru:'かける', hiku:'ひく', herasu:'へらす', orosu:'おろす' };
 
 function updateStepHint() {
   const c = state.current;
@@ -2190,38 +1306,39 @@ function updateStepHint() {
   const step = c.plan.steps[c.stepIdx];
   const stepHint = document.getElementById('stepHint');
   const numHint = document.getElementById('numHint');
-
   document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('next'));
 
   if (!step) {
-    stepHint.textContent = 'できた！';
-    numHint.textContent = 'できた！';
+    stepHint.textContent = 'できた！'; numHint.textContent = 'できた！';
     return;
   }
-
-  // ランダムモードでは「ヒント」を出さない（次に押すべき手順を教えない）
   const isRandom = (state.mode === 'random');
 
+  // ステップごとの説明
   if (isRandom) {
     stepHint.textContent = 'つぎの てじゅんは…?';
   } else {
-    stepHint.textContent = `つぎは「${STEP_NAMES_JA[step.kind]}」だよ`;
+    if (step.kind === 'tateru') stepHint.textContent = 'ゆびで かくして けんとうを つけよう';
+    else if (step.kind === 'herasu') stepHint.textContent = 'ひけない…しょうを 1へらそう';
+    else if (step.kind === 'kakeru') stepHint.textContent = 'みぎで かけ算を しよう';
+    else if (step.kind === 'hiku') stepHint.textContent = 'ひけるかな?';
+    else if (step.kind === 'orosu') stepHint.textContent = 'つぎの くらいを おろそう';
   }
 
   if (c.stepConfirmed) {
-    const stage = c.plan.stageData[step.position];
-    if (step.kind === 'tateru') numHint.textContent = `${step.partial} ÷ ${c.divisor} は…?`;
-    else if (step.kind === 'kakeru') {
-      const tateruStep = c.plan.steps.filter(s => s.kind === 'tateru' && s.position === step.position)[0];
-      const q = tateruStep ? tateruStep.value : '?';
-      numHint.textContent = `${q} × ${c.divisor} は…?`;
+    const stage = c.plan.stages[step.stageIdx];
+    if (step.kind === 'tateru' || step.kind === 'herasu') {
+      numHint.textContent = `けんとうを たてよう`;
+    } else if (step.kind === 'kakeru') {
+      numHint.textContent = multStepHintText();
+    } else if (step.kind === 'hiku') {
+      if (step.canSub) numHint.textContent = `${stage.partial} - ${step.product} は…?`;
+      else numHint.textContent = `ひけない! へらすを えらぼう`;
+    } else if (step.kind === 'orosu') {
+      numHint.textContent = `${step.value} を おろそう`;
     }
-    else if (step.kind === 'hiku')  numHint.textContent = `${step.partial} - ${stage.product} は…?`;
-    else if (step.kind === 'orosu') numHint.textContent = `${step.value} を おろそう`;
   } else {
     numHint.textContent = 'てじゅんを えらんでね';
-    // 固定モードでのみ、次に押すべきボタンに 'next' クラスを付けて
-    // 青枠＋揺れアニメで視覚的にヒントを出す
     if (!isRandom) {
       const btn = document.querySelector(`.step-btn[data-step="${step.kind}"]`);
       if (btn) btn.classList.add('next');
@@ -2232,17 +1349,12 @@ function updateStepHint() {
 /* ---------- INPUT EXPECTATIONS ---------- */
 function getExpectedDigits(step) {
   const c = state.current;
-  if (step.kind === 'tateru') return [String(step.value)];
-  if (step.kind === 'orosu')  return [String(step.value)];
-  if (step.kind === 'kakeru') {
-    const stage = c.plan.stageData[step.position];
-    // 積の桁数 = partialの桁数（左ゼロ埋めしない＝積の自然な桁数で表示）
-    // 例: 47÷3で stage 0 は partial=4, product=3 → 1桁
-    //     234÷5で stage 1 は partial=23, product=20 → 2桁
-    return String(stage.product).split('');
-  }
+  if (step.kind === 'tateru' || step.kind === 'herasu') return [String(step.value)];
+  if (step.kind === 'orosu') return [String(step.value)];
+  if (step.kind === 'kakeru') return String(step.value).split('');  // 積(右ワークスペース)
   if (step.kind === 'hiku') {
-    const stage = c.plan.stageData[step.position];
+    if (!step.canSub) return [];
+    const stage = c.plan.stages[step.stageIdx];
     return String(stage.remainder).split('');
   }
   return [];
@@ -2251,24 +1363,18 @@ function getExpectedDigits(step) {
 function getInputCellIds(step) {
   const c = state.current;
   const plan = c.plan;
-  if (step.kind === 'tateru') return [`q-${step.position}`];
+  if (step.kind === 'tateru' || step.kind === 'herasu') return [`q-${step.position}`];
   if (step.kind === 'orosu') {
-    // おろし先 = 前のステージの remainder 行の、step.position 列
-    // (=ひいた結果の右隣)
-    const prevActive = [...plan.activeStages].filter(p => p < step.position).pop();
-    if (prevActive !== undefined) return [`r-${prevActive}-${step.position}`];
+    const prevStage = [...plan.stages].filter(s => s.position < step.position).pop();
+    if (prevStage) return [`r-${prevStage.position}-${step.position}`];
     return [`d-${step.position}`];
   }
   if (step.kind === 'kakeru') {
-    const stage = plan.stageData[step.position];
-    const len = String(stage.product).length;
-    const startCol = stage.partialEnd - len + 1;
-    const ids = [];
-    for (let i = startCol; i <= stage.partialEnd; i++) ids.push(`p-${step.position}-${i}`);
-    return ids;
+    // 右のワークスペースに入力(専用の入力ボックス)
+    return ['mult-input'];
   }
   if (step.kind === 'hiku') {
-    const stage = plan.stageData[step.position];
+    const stage = plan.stages[step.stageIdx];
     const len = String(stage.remainder).length;
     const startCol = stage.partialEnd - len + 1;
     const ids = [];
@@ -2283,28 +1389,60 @@ function handleStepClick(stepKind) {
   const c = state.current;
   if (!c || c.completed) return;
   const expected = c.plan.steps[c.stepIdx];
-  if (!expected) return;
-  if (c.stepConfirmed) return;
-
-  // 操作があったのでアイドルタイマーリセット
+  if (!expected || c.stepConfirmed) return;
   resetIdleTimer();
 
   if (stepKind === expected.kind) {
     c.stepConfirmed = true;
     c.inputBuffer = [];
-    enableNumpad(true);
+    if (expected.kind === 'tateru' || expected.kind === 'herasu') {
+      setupMaskingForTateru(expected);
+      enableNumpad(true);
+    } else if (expected.kind === 'kakeru') {
+      clearAllMasks();
+      startMultInput(expected);
+      enableNumpad(true);
+    } else if (expected.kind === 'hiku') {
+      if (!expected.canSub) {
+        // ひけない! → メッセージを出して へらす へ誘導
+        enableNumpad(false);
+        showCannotSubtract(expected);
+        updateStepHint();
+        return;  // 以降のspotlight/hint更新はスキップ(へらす誘導済み)
+      } else {
+        enableNumpad(true);
+      }
+    } else {
+      enableNumpad(true);
+    }
     spotlightForStep(expected);
-    showHintForStep(expected);  // 固定モードのときは計算ソースを強調表示
+    showHintForStep(expected);
     updateStepHint();
   } else {
     const btn = document.querySelector(`.step-btn[data-step="${stepKind}"]`);
-    if (btn) {
-      btn.classList.add('wrong');
-      setTimeout(() => btn.classList.remove('wrong'), 600);
-    }
+    if (btn) { btn.classList.add('wrong'); setTimeout(() => btn.classList.remove('wrong'), 600); }
     c.errorCount++;
-    // 誤答時: 4〜5問目でヒント未要求なら、ヒントボタンを点滅
     triggerHintAttention();
+  }
+}
+
+/* ひけない場面: メッセージ + へらすボタン誘導。hikuステップを消化して次(herasu)へ */
+function showCannotSubtract(step) {
+  const c = state.current;
+  // 該当のかけ算アイテムを rejected 表示に
+  markLastMultRejected();
+  const numHint = document.getElementById('numHint');
+  numHint.textContent = 'ひけない! 「へらす」で しょうを 1へらそう';
+  // hiku(ひけない)ステップを消化 → 次は herasu
+  c.stepConfirmed = false;
+  c.inputBuffer = [];
+  c.stepIdx++;
+  clearSpotlight();
+  clearMaskables();
+  // へらすボタンを点滅させて誘導(ランダムモードでは誘導しない)
+  if (state.mode !== 'random') {
+    const btn = document.querySelector('.step-btn[data-step="herasu"]');
+    if (btn) btn.classList.add('next');
   }
 }
 
@@ -2313,9 +1451,10 @@ function handleNumClick(num) {
   if (!c || c.completed || !c.stepConfirmed) return;
   const step = c.plan.steps[c.stepIdx];
   if (!step) return;
-
-  // 操作があったのでアイドルタイマーリセット
   resetIdleTimer();
+
+  // かける は専用の入力処理
+  if (step.kind === 'kakeru') { handleMultNumInput(num); return; }
 
   const expected = getExpectedDigits(step);
   const cellIds = getInputCellIds(step);
@@ -2327,7 +1466,6 @@ function handleNumClick(num) {
     const cell = document.getElementById(cellId);
     if (cell) {
       if (step.kind === 'orosu') {
-        // おろすアニメーション: 数字が上から下りてくる
         cell.textContent = num;
         cell.classList.add('drop-anim');
         setTimeout(() => cell.classList.remove('drop-anim'), 700);
@@ -2335,72 +1473,534 @@ function handleNumClick(num) {
         cell.textContent = num;
         cell.classList.add('correct-pop', 'fade-in');
         setTimeout(() => cell.classList.remove('correct-pop'), 500);
-
-        // leadingZeroモード: 商の百の位(position 0)に立てた「0」は
-        // 答えとしては不要なので薄く表示する。問題完了時に斜線で消す。
-        if (step.kind === 'tateru' && c.plan.leadingZeroMode &&
-            step.position === 0 && num === 0) {
-          cell.classList.add('faded', 'lead-zero');
-        }
-
-        // hikuステップで「結果が0かつ1桁」かつ「最終ステージではない」場合、
-        // その0を薄く表示する (例: 648÷2 で 6-6=0 のような場面)
-        // → 後で「おろす」で右隣に数字が来ると「0X」のような不自然な表記になるのを防ぐ
-        if (step.kind === 'hiku' && num === 0 && expected.length === 1) {
-          // 最終ステージかどうか判定: このstep.positionが activeStagesの最後か
-          const isLastStage = c.plan.activeStages[c.plan.activeStages.length - 1] === step.position;
-          if (!isLastStage) {
-            cell.classList.add('faded');
-          }
-        }
       }
     }
-
     if (c.inputBuffer.length === expected.length) {
-      // ステップ完了
-      if (step.kind === 'kakeru') {
-        const sub = document.getElementById(`subline-${step.position}`);
-        if (sub) sub.style.display = 'block';
-      }
       advanceStep();
     }
   } else {
-    // 間違い: セルには何も入れない（バグ防止）。代わりにテンキーを振動させ、
-    // 該当セルを赤く点滅させる。
     const cellId = cellIds[bufIdx];
     const cell = document.getElementById(cellId);
-    if (cell) {
-      // 赤フラッシュのみ（textContentは触らない）
-      cell.classList.add('error');
-      setTimeout(() => cell.classList.remove('error'), 1200);
-    }
-    // テンキーボタンも振動させる
+    if (cell) { cell.classList.add('error'); setTimeout(() => cell.classList.remove('error'), 1200); }
     const numBtn = document.querySelector(`.num-btn[data-num="${num}"]`);
-    if (numBtn) {
-      numBtn.classList.add('wrong');
-      setTimeout(() => numBtn.classList.remove('wrong'), 600);
-    }
+    if (numBtn) { numBtn.classList.add('wrong'); setTimeout(() => numBtn.classList.remove('wrong'), 600); }
     c.errorCount++;
-    // 誤答時: 4〜5問目でヒント未要求なら、ヒントボタンを点滅
     triggerHintAttention();
   }
 }
 
+/* ---------- MULT WORKSPACE (かけ算を右に残す) ---------- */
+/* ---------- MULT WORKSPACE: グリッドに揃えた縦ひっ算 ---------- */
+/* 各試行の縦ひっ算を、背景マス目と同じピッチのマスで組み立てる。
+   レイアウト(1マス1文字):
+     行0:            [ ][d1][d2]   ← わる数(2桁) 右詰め
+     行1:         [×][  ][ q]      ← ×仮商
+     ────────── (よこ線)
+     行2:         [p0][p1][p2]     ← 積(2〜3桁) 右詰め
+   横は4カラム(col0=×/空, col1..3=数字3桁ぶん)。 */
+
+function getMultLayout() {
+  // 試行数に応じてマスサイズを決める(縦に収める)
+  const c = state.current;
+  const panel = document.getElementById('calcPanel');
+  const ph = panel.clientHeight;
+  const baseCell = getCellSize();
+  const attempts = c._multAttempts || 1;
+  const ROWS_PER = 3.15;      // ひっ算1つの縦マス数(線・余白込み)
+  const TITLE_ROWS = 1.1;
+  const totalRows = TITLE_ROWS + attempts * ROWS_PER + 0.5;
+  let mcell = baseCell;
+  const avail = ph - 8;
+  if (totalRows * mcell > avail) mcell = Math.floor(avail / totalRows);
+  mcell = Math.max(20, Math.min(mcell, baseCell));
+  return { mcell, ROWS_PER, TITLE_ROWS };
+}
+
+function relayoutMultWorkspace() {
+  // すべてのひっ算を、現在の試行数に合わせて再配置(マスサイズ調整)
+  const c = state.current;
+  const ws = document.getElementById('multWorkspace');
+  const { mcell, ROWS_PER, TITLE_ROWS } = getMultLayout();
+  c._multCell = mcell;
+
+  // タイトル位置
+  const title = document.getElementById('multWsTitle');
+  if (title) { title.style.left = '0px'; title.style.top = '0px'; }
+
+  const hissans = ws.querySelectorAll('.mult-hissan');
+  hissans.forEach((h, idx) => {
+    const topRow = TITLE_ROWS + idx * ROWS_PER;
+    layoutOneHissan(h, mcell, topRow * mcell);
+  });
+}
+
+/* 1つのひっ算要素の内部セルを配置(mcellサイズ, 上端topPx)
+   列は右=1の位。カラム構成: [× ][百][十][一] の4カラム(col0..3, 右が一の位)。
+   数字カラムは右から: 一=col3, 十=col2, 百=col1。 */
+const ROWS_PER_CONST = 3.4;   // くり上がり行ぶん少し高く
+function layoutOneHissan(hEl, mcell, topPx) {
+  const c = state.current;
+  const mc = String(hEl.dataset.multiplicand);   // わる数 2桁
+  const mq = String(hEl.dataset.multiplier);      // 仮商 1桁
+  const prodLen = parseInt(hEl.dataset.prodLen, 10) || String(hEl.dataset.productFull).length;
+  const isCurrent = (hEl.id === 'mult-current');
+
+  const COLS = 4;             // col0=×, col1=百, col2=十, col3=一
+  const fontSize = mcell * 0.62;
+  const carryFont = mcell * 0.34;
+  hEl.style.left = '0px';
+  hEl.style.top = topPx + 'px';
+  hEl.style.width = (COLS * mcell) + 'px';
+  hEl.style.height = (ROWS_PER_CONST * mcell) + 'px';
+  hEl.innerHTML = '';
+
+  // 行: 0=くり上がり, 1=わる数, 2=×仮商, 3=積 (よこ線は行2と行3の間)
+  const ROW_CARRY = 0, ROW_MC = 1, ROW_MQ = 2, ROW_PROD = 3;
+
+  function put(col, row, ch, cls, fs) {
+    const el = document.createElement('div');
+    el.className = 'mult-cell' + (cls ? ' ' + cls : '');
+    el.style.left = (col * mcell) + 'px';
+    el.style.top  = (row * mcell) + 'px';
+    el.style.width = mcell + 'px';
+    el.style.height = mcell + 'px';
+    el.style.fontSize = (fs || fontSize) + 'px';
+    el.textContent = ch;
+    hEl.appendChild(el);
+    return el;
+  }
+
+  // 列インデックス: 一の位(prodcol 0)=col3, 十(1)=col2, 百(2)=col1
+  const colOf = pc => 3 - pc;
+
+  // 行1: わる数(2桁) 右詰め → col2(十),col3(一)
+  put(2, ROW_MC, mc[0]);
+  put(3, ROW_MC, mc[1]);
+  // 行2: × と 仮商(col3=一の位そろえ)
+  put(0, ROW_MQ, '×', 'op');
+  put(3, ROW_MQ, mq);
+  // よこ線(行2の下)
+  const line = document.createElement('div');
+  line.className = 'mult-underline';
+  line.style.left = (1 * mcell) + 'px';
+  line.style.top  = ((ROW_MQ + 1) * mcell - 1) + 'px';
+  line.style.width = (3 * mcell) + 'px';
+  hEl.appendChild(line);
+
+  // 行3: 積。prodcol 0(一)→ colOf。入力済みのものを表示、次のマスは枠。
+  const filled = isCurrent ? (c.multFilled || {}) : null;
+  const curStep = (isCurrent && c.multSteps) ? c.multSteps[c.multStepIdx] : null;
+  const typing = (isCurrent && c.multTyping) ? c.multTyping : '';
+
+  // 入力中の桁を「実際にノートに書く位置」へ振り分ける。
+  //   その列の答え(cur.typed 例"18")の
+  //     ・一の位(末尾) → 積の行のこの列(col)
+  //     ・十の位以上(先頭側) → くり上がりとして次の列の上へ
+  //   最上位カラム(isFinal)は答えを全部 積の行に書く(くり上がりにしない)。
+  const typingProdMap = {};   // prodCol -> 桁 (積の行)
+  const typingCarryMap = {};  // 表示するくり上がり prodCol(次の列) -> 桁
+  if (curStep && typing) {
+    const target = String(curStep.typed);
+    const tlen = target.length;
+    if (curStep.isFinal) {
+      // 全部 積の行へ(右詰め、curStep.col を一の位起点に左へ)
+      for (let i = 0; i < typing.length; i++) {
+        const pc = curStep.col + i;
+        typingProdMap[pc] = typing[typing.length - 1 - i];
+      }
+    } else {
+      // 末尾桁=一の位→積の行、それ以外=くり上がり→次の列の上
+      for (let i = 0; i < typing.length; i++) {
+        // typing[i] は答えの左からi番目。位置(右からの桁)= tlen-1 - i ... ではなく
+        // 入力は左→右なので、typingの各文字が答えのどの位かを知るには
+        // 「まだ入力途中でも、最終的な位置」を使う: 答えtargetの左からi文字目は
+        //   右から (tlen-1-i) 桁目 = その列からの相対位置
+        const posFromRight = tlen - 1 - i;   // 0=一の位
+        const ch = typing[i];
+        if (posFromRight === 0) {
+          typingProdMap[curStep.col] = ch;             // 一の位 → 積の行
+        } else {
+          // くり上がり: 次の列(col + posFromRight)の上へ
+          typingCarryMap[curStep.col + posFromRight] = ch;
+        }
+      }
+    }
+  }
+
+  const prodCols = new Set();
+  for (let pc = 0; pc < prodLen; pc++) prodCols.add(pc);
+  Object.keys(typingProdMap).forEach(k => prodCols.add(parseInt(k,10)));
+  if (filled) Object.keys(filled).forEach(k => prodCols.add(parseInt(k,10)));
+  const maxProdCol = Math.max(...prodCols, 0);
+
+  for (let pc = 0; pc <= maxProdCol; pc++) {
+    const col = colOf(pc);
+    if (col < 0) continue;
+    let ch = '';
+    let isBlank = false, isNext = false, isTyping = false;
+    if (isCurrent) {
+      if (typingProdMap[pc] !== undefined) { ch = typingProdMap[pc]; isTyping = true; }
+      else if (filled[pc] !== undefined) ch = String(filled[pc]);
+      else { isBlank = true; if (curStep && curStep.col === pc) isNext = true; }
+    } else {
+      const full = String(hEl.dataset.productFull).padStart(prodLen, '0');
+      ch = full[prodLen - 1 - pc];
+    }
+    const cls = isBlank ? 'answer-blank' : (isTyping ? 'typing' : '');
+    const el = put(col, ROW_PROD, ch, cls);
+    el.dataset.prodcol = pc;
+    if (isNext) el.classList.add('answer-blank');
+  }
+
+  // くり上がり表示(行0)。col(=colOf(pc))の上に小さく。currentのみ。
+  if (isCurrent) {
+    // 確定したくり上がり
+    const carryToShow = {};
+    if (c.multCarries) Object.keys(c.multCarries).forEach(k => { carryToShow[k] = String(c.multCarries[k]); });
+    // 入力中のくり上がり(1を先に5の上へ)
+    Object.keys(typingCarryMap).forEach(k => { carryToShow[k] = typingCarryMap[k]; });
+    Object.keys(carryToShow).forEach(pcStr => {
+      const pc = parseInt(pcStr, 10);
+      if (pc > maxProdCol + 1) return;
+      const col = colOf(pc);
+      if (col < 0) return;
+      const isTypingCarry = (typingCarryMap[pc] !== undefined);
+      put(col, ROW_CARRY, carryToShow[pc], isTypingCarry ? 'carry typing-carry' : 'carry', carryFont);
+    });
+  }
+
+  if (hEl.classList.contains('rejected')) {
+    addStrike(hEl, mcell, prodLen);
+    addNote(hEl, mcell, '✗ ひけない', COLS, ROW_PROD);
+  } else if (hEl.classList.contains('accepted')) {
+    addNote(hEl, mcell, '✓ これだ!', COLS, ROW_PROD);
+  }
+}
+
+function addStrike(hEl, mcell, prodLen) {
+  const startCol = 4 - prodLen;
+  const strike = document.createElement('div');
+  strike.className = 'mult-strike';
+  strike.style.left = (startCol * mcell + mcell*0.05) + 'px';
+  strike.style.top  = (3.5 * mcell) + 'px';
+  strike.style.width = (prodLen * mcell - mcell*0.1) + 'px';
+  hEl.appendChild(strike);
+}
+function addNote(hEl, mcell, text, COLS, prodRow) {
+  const note = document.createElement('div');
+  note.className = 'mult-note';
+  note.textContent = text;
+  note.style.left = (COLS * mcell + mcell*0.1) + 'px';
+  note.style.top  = (prodRow * mcell + mcell*0.1) + 'px';
+  note.style.fontSize = (mcell * 0.42) + 'px';
+  hEl.appendChild(note);
+}
+
+/* かけ算ひっ算の「1の位から」入力手順を作る。
+   わる数(2桁) × 仮商(1桁)。列ごとに、その列の「かけ算の答え」を丸ごと入力する。
+     一の位: 9×2=18 → 「18」と入力。一の位に 8、くり上がり 1 は十の位(5)の上へ。
+     十の位: 5×2＋1=11 → 「11」と入力。最後の位なので 11 をそのまま(十の位に1,百の位に1)。
+   返り値: { entries:[{col, typed, placedDigit, carry, isFinal, factorDigit, incomingCarry}], prodLen }
+     col … 一=0, 十=1 (その列に「答えの一の位」が入る)
+     typed … 子どもが入力する数(その列のかけ算の答え。文字列)
+     placedDigit … その列に残す1桁
+     carry … 次の列の上に表示するくり上がり(数、0ならなし)
+     isFinal … 最上位カラム(くり上がりも書き出す) */
+function computeMultSteps(divisor, q) {
+  const ds = String(divisor).split('').map(Number);
+  const onesD = ds[ds.length - 1];
+  const tensD = ds.length >= 2 ? ds[ds.length - 2] : 0;
+  const entries = [];
+
+  // 一の位
+  const p1 = onesD * q;                 // 例 9×2=18
+  const carry1 = Math.floor(p1 / 10);   // 1
+  entries.push({
+    col: 0, typed: String(p1), placedDigit: p1 % 10,
+    carry: carry1, isFinal: false, factorDigit: onesD, incomingCarry: 0
+  });
+
+  // 十の位(最上位)
+  const p2 = tensD * q + carry1;        // 例 5×2+1=11
+  entries.push({
+    col: 1, typed: String(p2), placedDigit: p2 % 10,
+    carry: Math.floor(p2 / 10), isFinal: true, factorDigit: tensD, incomingCarry: carry1
+  });
+
+  const prodLen = String(divisor * q).length;
+  return { entries, prodLen };
+}
+
+/* いま入力すべき列の計算をヒント表示 */
+function multStepHintText() {
+  const c = state.current;
+  if (!c.multSteps || !c.multSteps[c.multStepIdx]) return 'かけ算しよう';
+  const cur = c.multSteps[c.multStepIdx];
+  const q = parseInt(document.getElementById('mult-current')?.dataset.multiplier, 10);
+  if (cur.col === 0) {
+    return `一のくらい: ${cur.factorDigit} × ${q} は…?`;
+  } else {
+    if (cur.incomingCarry) return `十のくらい: ${cur.factorDigit} × ${q} ＋ ${cur.incomingCarry} は…?`;
+    return `十のくらい: ${cur.factorDigit} × ${q} は…?`;
+  }
+}
+
+function startMultInput(step) {
+  const c = state.current;
+  const ws = document.getElementById('multWorkspace');
+  if (!document.getElementById('multWsTitle')) {
+    const title = document.createElement('div');
+    title.className = 'mult-ws-title';
+    title.id = 'multWsTitle';
+    title.textContent = '✖️ かけ算の ひっ算';
+    ws.appendChild(title);
+  }
+  c._multAttempts = (c._multAttempts || 0) + 1;
+
+  const msteps = computeMultSteps(c.divisor, step.qForMult);
+  const item = document.createElement('div');
+  item.className = 'mult-hissan newpop';
+  item.id = 'mult-current';
+  item.dataset.multiplicand = String(c.divisor);
+  item.dataset.multiplier = String(step.qForMult);
+  item.dataset.productFull = String(step.value);
+  item.dataset.prodLen = String(msteps.prodLen);
+  ws.appendChild(item);
+
+  // 入力状態: 列ごとに「その列のかけ算の答え」を丸ごと入力する
+  c.multSteps = msteps.entries;
+  c.multStepIdx = 0;
+  c.multFilled = {};              // prodCol -> 確定した1桁
+  c.multCarries = {};             // prodCol -> その列の上に出すくり上がり(文字列/数)
+  c.multTyping = '';              // いま入力中の桁(その列の答えを組み立て中)
+
+  relayoutMultWorkspace();
+  setTimeout(() => item.classList.remove('newpop'), 400);
+}
+
+function handleMultNumInput(num) {
+  const c = state.current;
+  const item = document.getElementById('mult-current');
+  if (!item || !c.multSteps) return;
+  const cur = c.multSteps[c.multStepIdx];
+  if (!cur) return;
+
+  const typed = c.multTyping + String(num);
+  const target = String(cur.typed);
+
+  // 入力中の桁が、答えの先頭一致になっているか(前方一致)チェック
+  if (target.startsWith(typed)) {
+    c.multTyping = typed;
+    // 途中表示: いま入力中の数を現在の列セルに仮表示
+    relayoutMultWorkspace();
+    const cell = item.querySelector(`.mult-cell[data-prodcol="${cur.col}"]`);
+    if (cell) { cell.classList.add('correct-pop'); setTimeout(()=>cell.classList.remove('correct-pop'),350); }
+
+    if (typed === target) {
+      // その列の答えが完成 → 位に振り分け
+      commitMultColumn(cur);
+      c.multTyping = '';
+      c.multStepIdx++;
+      relayoutMultWorkspace();
+      if (c.multStepIdx >= c.multSteps.length) {
+        finalizeMultItem();
+        // かけ算の答えを わり算のひっ算(積の行)へ転記(アニメーション)してから ひくへ
+        transcribeProductToDivision(() => advanceStep());
+      } else {
+        const numHint = document.getElementById('numHint');
+        if (numHint) numHint.textContent = multStepHintText();
+      }
+    }
+  } else {
+    const cell = item.querySelector(`.mult-cell[data-prodcol="${cur.col}"]`);
+    if (cell) { cell.classList.add('error'); setTimeout(()=>cell.classList.remove('error'),1000); }
+    const numBtn = document.querySelector(`.num-btn[data-num="${num}"]`);
+    if (numBtn) { numBtn.classList.add('wrong'); setTimeout(() => numBtn.classList.remove('wrong'), 600); }
+    c.multTyping = '';   // 入力やり直し
+    relayoutMultWorkspace();
+    c.errorCount++;
+    triggerHintAttention();
+  }
+}
+
+/* 完成した列の答えを、位(マス)とくり上がりに振り分ける */
+function commitMultColumn(cur) {
+  const c = state.current;
+  if (!cur.isFinal) {
+    // 一の位など: 一の位の桁を残し、残り(くり上がり)は次の列の上へ
+    c.multFilled[cur.col] = cur.placedDigit;
+    if (cur.carry > 0) c.multCarries[cur.col + 1] = cur.carry;
+  } else {
+    // 最上位: 答えを全部書き出す(例 11 → 十の位1, 百の位1)
+    const digits = String(cur.typed).split('').map(Number); // 例 [1,1]
+    // 右から順に col, col+1, ... へ
+    for (let i = 0; i < digits.length; i++) {
+      const prodCol = cur.col + i;
+      c.multFilled[prodCol] = digits[digits.length - 1 - i];
+    }
+    // 最上位カラムに入っていたくり上がり表示は、書き出したので消す
+    if (c.multCarries[cur.col] !== undefined) delete c.multCarries[cur.col];
+  }
+}
+
+function finalizeMultItem() {
+  const item = document.getElementById('mult-current');
+  if (!item) return;
+  item.dataset.finalized = '1';
+  item.id = '';
+  relayoutMultWorkspace();
+}
+
+/* かけ算の答えを わり算のひっ算の「積の行(p-)」へ転記する。
+   右のかけ算ひっ算の各桁が、対応する p- マスへ飛んでいくアニメーション。 */
+function transcribeProductToDivision(done) {
+  const c = state.current;
+  const step = c.plan.steps[c.stepIdx];        // いまの kakeru ステップ
+  if (!step || step.kind !== 'kakeru') { if (done) done(); return; }
+  const stage = c.plan.stages[step.stageIdx];
+  const div = document.getElementById('division');
+  const cell = getCellSize();
+  const prodStr = String(step.value);          // 例 "648"
+  const prodLen = prodStr.length;
+
+  // 直近に確定した(=右の)かけ算ひっ算を取得
+  const ws = document.getElementById('multWorkspace');
+  const hissans = ws.querySelectorAll('.mult-hissan');
+  const lastH = hissans[hissans.length - 1];
+
+  // 転記先の p- マスをハイライト(赤枠)
+  const startCol = stage.partialEnd - prodLen + 1;
+  showProductRowHighlight(step.position, startCol, prodLen, cell);
+
+  // 各桁ごとに飛ぶ数字を作る
+  const divRect = div.getBoundingClientRect();
+  let landed = 0;
+  const totalToLand = prodLen;
+
+  for (let pc = 0; pc < prodLen; pc++) {
+    // かけ算ひっ算側のソースセル(data-prodcol=pc)
+    const srcCell = lastH ? lastH.querySelector(`.mult-cell[data-prodcol="${pc}"]`) : null;
+    // 転記先: p-{position}-{partialEnd - pc}
+    const destCol = stage.partialEnd - pc;
+    const destId = `p-${step.position}-${destCol}`;
+    const destCell = document.getElementById(destId);
+    if (!srcCell || !destCell) { landed++; continue; }
+
+    const srcRect = srcCell.getBoundingClientRect();
+    // 飛ぶ数字(divのローカル座標)
+    const fly = document.createElement('div');
+    fly.className = 'fly-digit';
+    fly.textContent = prodStr[prodLen - 1 - pc];
+    fly.style.width = cell + 'px';
+    fly.style.height = cell + 'px';
+    fly.style.fontSize = (cell * 0.68) + 'px';
+    // 開始位置(div基準)
+    const startLeft = srcRect.left - divRect.left + (srcRect.width - cell)/2;
+    const startTop  = srcRect.top  - divRect.top  + (srcRect.height - cell)/2;
+    fly.style.left = startLeft + 'px';
+    fly.style.top  = startTop + 'px';
+    fly.style.transform = 'scale(1)';
+    div.appendChild(fly);
+
+    // 目標位置(p-セルの座標)
+    const destLeft = parseFloat(destCell.style.left);
+    const destTop  = parseFloat(destCell.style.top);
+
+    // 少し時間差で飛ばす(一の位から)
+    const delay = 120 + pc * 130;
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        fly.style.left = destLeft + 'px';
+        fly.style.top  = destTop + 'px';
+      }, delay);
+    });
+    // 着地
+    setTimeout(() => {
+      destCell.textContent = prodStr[prodLen - 1 - pc];
+      destCell.classList.add('copy-land');
+      setTimeout(() => destCell.classList.remove('copy-land'), 400);
+      fly.remove();
+      landed++;
+      if (landed >= totalToLand) {
+        // 全部着地 → 引き算の線を出して次へ
+        const sub = document.getElementById(`subline-${step.position}`);
+        if (sub) sub.style.display = 'block';
+        setTimeout(() => {
+          hideProductRowHighlight();
+          if (done) done();
+        }, 250);
+      }
+    }, delay + 560);
+  }
+
+  if (totalToLand === 0 && done) done();
+}
+
+function showProductRowHighlight(position, startCol, prodLen, cell) {
+  hideProductRowHighlight();
+  const div = document.getElementById('division');
+  const c = state.current;
+  const FIRST = String(c.divisor).length;
+  const stage = c.plan.stages.find(s => s.position === position);
+  const productRow = 2 + c.plan.stages.indexOf(stage) * 2;
+  const hl = document.createElement('div');
+  hl.className = 'p-row-highlight';
+  hl.id = 'pRowHighlight';
+  hl.style.left = ((FIRST + startCol) * cell - 2) + 'px';
+  hl.style.top  = (productRow * cell - 2) + 'px';
+  hl.style.width = (prodLen * cell + 4) + 'px';
+  hl.style.height = (cell + 4) + 'px';
+  div.appendChild(hl);
+  requestAnimationFrame(() => hl.classList.add('show'));
+}
+function hideProductRowHighlight() {
+  const hl = document.getElementById('pRowHighlight');
+  if (hl) { hl.classList.remove('show'); setTimeout(() => hl.remove(), 300); }
+}
+
+/* ひけないかけ算に 取り消し線 */
+function markLastMultRejected() {
+  const ws = document.getElementById('multWorkspace');
+  const items = ws.querySelectorAll('.mult-hissan');
+  if (items.length === 0) return;
+  const last = items[items.length - 1];
+  last.classList.add('rejected');
+  relayoutMultWorkspace();
+}
+/* ひけたかけ算に ✓ */
+function markLastMultAccepted() {
+  const ws = document.getElementById('multWorkspace');
+  const items = ws.querySelectorAll('.mult-hissan');
+  if (items.length === 0) return;
+  const last = items[items.length - 1];
+  last.classList.add('accepted');
+  relayoutMultWorkspace();
+}
+
+/* ---------- ADVANCE ---------- */
 function advanceStep() {
   const c = state.current;
+  const doneStep = c.plan.steps[c.stepIdx];
+
+  // ひく成功時: かけ算アイテムに✓、subline表示
+  if (doneStep && doneStep.kind === 'hiku' && doneStep.canSub) {
+    markLastMultAccepted();
+    const sub = document.getElementById(`subline-${doneStep.position}`);
+    if (sub) sub.style.display = 'block';
+  }
+
   c.stepConfirmed = false;
   c.inputBuffer = [];
   c.stepIdx++;
   enableNumpad(false);
   clearSpotlight();
+  clearMaskables();
 
   if (c.stepIdx >= c.plan.steps.length) {
-    // 問題完了
     c.completed = true;
     if (c.errorCount <= 1) state.correctCount++;
     document.getElementById('correctDisplay').textContent = state.correctCount;
-    clearIdleTimer();  // 問題完了時はタイマー不要
-    strikeLeadingZero();  // leadingZeroモード: 不要な先頭の0に斜線を引いて消す
+    clearIdleTimer();
     showRemainderTag();
     showCorrectMark();
   } else {
@@ -2408,200 +2008,98 @@ function advanceStep() {
   }
 }
 
-/* leadingZeroモードの商の先頭「0」に斜線を引いて「消した」ことを示す
-   (教科書的な「いらない0は消す」表現) */
-function strikeLeadingZero() {
-  const c = state.current;
-  if (!c || !c.plan.leadingZeroMode) return;
-  const cell = document.getElementById('q-0');
-  if (cell && cell.classList.contains('lead-zero')) {
-    cell.classList.add('struck');
-  }
-}
-
 function showRemainderTag() {
   const c = state.current;
-  if (!c || c.plan.finalRemainder === 0) return;
-  // dividend row（row=1）の右側にあまりを表示
-  // ※ 簡易的に右下に表示
+  if (!c || c.plan.remainder === 0) return;
   const div = document.getElementById('division');
   const cell = getCellSize();
+  const lastStage = c.plan.stages[c.plan.stages.length - 1];
+  const FIRST_DIGIT_COL = String(c.divisor).length;
+  // 最終あまり行の下に「あまり N」を置く(ひっ算の内側・ワークスペースと重ならない)
+  const remRow = 3 + (c.plan.stages.length - 1) * 2;
   const tag = document.createElement('div');
   tag.className = 'remainder-tag';
-  tag.innerHTML = `<span class="label">あまり</span><span class="value">${c.plan.finalRemainder}</span>`;
-  tag.style.left = ((1 + c.n + 0.3) * cell) + 'px';
-  tag.style.top  = (1 * cell + cell * 0.3) + 'px';
+  tag.innerHTML = `<span class="label">あまり</span><span class="value">${c.plan.remainder}</span>`;
+  tag.style.left = (FIRST_DIGIT_COL * cell) + 'px';
+  tag.style.top  = ((remRow + 1) * cell + cell * 0.05) + 'px';
   div.appendChild(tag);
 }
 
-/* ---------- 正解マーク表示 ---------- */
+/* ---------- CORRECT MARK ---------- */
 function showCorrectMark() {
   const maru = document.getElementById('bigMaru');
   const nextBtn = document.getElementById('nextQBtn');
-
   maru.style.display = 'flex';
-
-  // 筆算に重ならないように赤丸・せいかいテキストの位置とサイズを決める
   positionCorrectMark();
-
-  // SVGラップのアニメ
   const wrap = maru.querySelector('.maru-svg-wrap');
-  if (wrap) {
-    wrap.style.animation = 'none';
-    void wrap.offsetWidth;
-    wrap.style.animation = 'maruDraw 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) forwards';
-  }
-  // 円のstrokeアニメ
+  if (wrap) { wrap.style.animation = 'none'; void wrap.offsetWidth; wrap.style.animation = 'maruDraw 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) forwards'; }
   const circle = maru.querySelector('circle');
-  if (circle) {
-    circle.style.animation = 'none';
-    void circle.offsetWidth;
-    circle.style.animation = 'maruStroke 0.7s ease-out forwards';
-  }
-  // 「せいかい！」テキストのアニメ
+  if (circle) { circle.style.animation = 'none'; void circle.offsetWidth; circle.style.animation = 'maruStroke 0.7s ease-out forwards'; }
   const seikai = maru.querySelector('.seikai-text');
-  if (seikai) {
-    seikai.style.animation = 'none';
-    void seikai.offsetWidth;
-    seikai.style.animation = 'textPop 0.4s 0.6s forwards';
-  }
-
-  // 「つぎへ」ボタンを表示
-  nextBtn.style.animation = 'none';
-  void nextBtn.offsetWidth;
-  nextBtn.style.animation = 'nextBtnIn 0.5s 0.8s both';
+  if (seikai) { seikai.style.animation = 'none'; void seikai.offsetWidth; seikai.style.animation = 'textPop 0.4s 0.6s forwards'; }
+  nextBtn.style.animation = 'none'; void nextBtn.offsetWidth; nextBtn.style.animation = 'nextBtnIn 0.5s 0.8s both';
   nextBtn.classList.add('show');
-
   nextBtn.onclick = goNextQuestion;
 }
 
-/* 正解マーク(○・せいかい！)を筆算に重ならない空きスペースに配置する。
-   筆算(#division)の領域を取得し、
-   - 「下側の空き高さ」と「右側の空き幅」を比べ、広い方の空きエリアに配置
-   - そのエリアの短辺に収まるよう赤丸のサイズを決める
-   さらに「つぎのもんだいへ」ボタンも筆算の最下端より下に来るよう調整する */
 function positionCorrectMark() {
   const maru = document.getElementById('bigMaru');
   const wrap = maru.querySelector('.maru-svg-wrap');
   const panel = document.getElementById('calcPanel');
   const division = document.getElementById('division');
   if (!maru || !wrap || !panel || !division) return;
-
-  const pw = panel.clientWidth;
-  const ph = panel.clientHeight;
-
-  // 筆算の領域 (calcPanel内のローカル座標)
-  const divLeft   = parseFloat(division.style.left) || 0;
-  const divTop    = parseFloat(division.style.top)  || 0;
-  const divWidth  = parseFloat(division.style.width)  || division.clientWidth;
-  const divHeight = parseFloat(division.style.height) || division.clientHeight;
-  const divRight  = divLeft + divWidth;
+  const pw = panel.clientWidth, ph = panel.clientHeight;
+  const divLeft = parseFloat(division.style.left)||0, divTop = parseFloat(division.style.top)||0;
+  const divWidth = parseFloat(division.style.width)||0, divHeight = parseFloat(division.style.height)||0;
   const divBottom = divTop + divHeight;
+  const PAD = 12;
+  const belowH = ph - divBottom;
+  const belowSize = Math.min(pw * 0.7, Math.max(0, belowH - PAD * 2));
 
-  const PAD = 12; // 筆算とマークの間の最小余白(px)
-
-  // 空きエリア候補: 下側 と 右側
-  const belowH = ph - divBottom;        // 筆算の下の空き高さ
-  const rightW = pw - divRight;         // 筆算の右の空き幅
-
-  // 赤丸が確保できる最大の正方形サイズを各エリアで算出
-  // 下側エリア: 幅=パネル全幅, 高さ=belowH
-  const belowSize = Math.min(pw * 0.9, Math.max(0, belowH - PAD * 2));
-  // 右側エリア: 幅=rightW, 高さ=パネル全高
-  const rightSize = Math.min(ph * 0.75, Math.max(0, rightW - PAD * 2));
-
-  // マーク本体(○+せいかい)を absolute なボックスとして配置する設定にする
   maru.style.inset = 'auto';
   maru.style.justifyContent = 'center';
   maru.style.alignItems = 'center';
 
   let boxLeft, boxTop, boxW, boxH, size;
-
-  if (belowSize >= rightSize && belowSize >= 80) {
-    // 下側に配置
-    size = belowSize;
-    boxW = pw;
-    boxH = belowH;
-    boxLeft = 0;
-    boxTop = divBottom;
-  } else if (rightSize >= 80) {
-    // 右側に配置
-    size = rightSize;
-    boxW = rightW;
-    boxH = ph;
-    boxLeft = divRight;
-    boxTop = 0;
+  if (belowSize >= 80) {
+    size = belowSize; boxW = pw; boxH = belowH; boxLeft = 0; boxTop = divBottom;
   } else {
-    // どちらの余白も狭い場合: パネル全体に小さめ表示(従来挙動に近いフォールバック)
-    size = Math.min(pw, ph) * 0.5;
-    boxW = pw;
-    boxH = ph;
-    boxLeft = 0;
-    boxTop = 0;
+    size = Math.min(pw, ph) * 0.45; boxW = pw; boxH = ph; boxLeft = 0; boxTop = 0;
   }
+  maru.style.left = boxLeft + 'px'; maru.style.top = boxTop + 'px';
+  maru.style.width = boxW + 'px'; maru.style.height = boxH + 'px';
+  const circleSize = Math.max(60, size * 0.75);
+  wrap.style.width = circleSize + 'px'; wrap.style.height = circleSize + 'px';
+  wrap.style.maxWidth = '90%'; wrap.style.maxHeight = '70%';
 
-  maru.style.left   = boxLeft + 'px';
-  maru.style.top    = boxTop + 'px';
-  maru.style.width  = boxW + 'px';
-  maru.style.height = boxH + 'px';
-
-  // 赤丸サイズを設定(せいかいテキストの分を少し残す)
-  const circleSize = Math.max(60, size * 0.78);
-  wrap.style.width  = circleSize + 'px';
-  wrap.style.height = circleSize + 'px';
-  wrap.style.maxWidth  = '95%';
-  wrap.style.maxHeight = '70%';
-
-  // 「つぎのもんだいへ」ボタンを筆算の最下端より下に置く
-  // (筆算が縦に長い問題で、ボタンが筆算に重なるのを防ぐ)
   const nextBtn = document.getElementById('nextQBtn');
   if (nextBtn) {
-    // ボタン高さ概算(レンダリング前なので一旦表示して測る)
     const prevDisplay = nextBtn.style.display;
-    nextBtn.style.visibility = 'hidden';
-    nextBtn.style.display = 'block';
+    nextBtn.style.visibility = 'hidden'; nextBtn.style.display = 'block';
     const btnH = nextBtn.offsetHeight || 56;
-    nextBtn.style.display = prevDisplay;
-    nextBtn.style.visibility = '';
-
-    // 筆算下端 + 余白 を基準にしつつ、パネル下端からはみ出さない位置に
-    const desiredTop = divBottom + PAD;
-    const maxTop = ph - btnH - PAD;
-    let btnTop = Math.min(desiredTop, maxTop);
-    // 下側にマークを置いた場合は、マークとボタンが重ならないよう最下部へ寄せる
-    if (boxTop === divBottom && boxLeft === 0) {
-      btnTop = ph - btnH - PAD;
-    }
+    nextBtn.style.display = prevDisplay; nextBtn.style.visibility = '';
+    let btnTop = ph - btnH - PAD;
     if (btnTop < PAD) btnTop = PAD;
-    nextBtn.style.bottom = 'auto';
-    nextBtn.style.top = btnTop + 'px';
+    nextBtn.style.bottom = 'auto'; nextBtn.style.top = btnTop + 'px';
   }
 }
 
 function goNextQuestion() {
+  resetMarkAndButtons();
+  state.qIdx++;
+  if (state.qIdx >= state.questions.length) showResults();
+  else loadQuestion();
+}
+function resetMarkAndButtons() {
   const maru = document.getElementById('bigMaru');
   const nextBtn = document.getElementById('nextQBtn');
   maru.style.display = 'none';
   nextBtn.classList.remove('show');
-  // 次回の正解時に positionCorrectMark で再計算できるよう、
-  // 動的に設定したインラインスタイルをクリアしておく
-  maru.style.left = '';
-  maru.style.top = '';
-  maru.style.width = '';
-  maru.style.height = '';
-  maru.style.inset = '';
-  nextBtn.style.top = '';
-  nextBtn.style.bottom = '';
-
-  state.qIdx++;
-  if (state.qIdx >= state.questions.length) {
-    showResults();
-  } else {
-    loadQuestion();
-  }
+  maru.style.left=''; maru.style.top=''; maru.style.width=''; maru.style.height=''; maru.style.inset='';
+  nextBtn.style.top=''; nextBtn.style.bottom='';
 }
 
-/* ---------- NUMPAD ENABLE ---------- */
+/* ---------- NUMPAD ---------- */
 function enableNumpad(on) {
   const pad = document.getElementById('numpadPanel');
   if (on) pad.classList.remove('disabled');
@@ -2612,296 +2110,176 @@ function enableNumpad(on) {
 function loadQuestion() {
   const q = state.questions[state.qIdx];
   const dividend = q[0], divisor = q[1];
-  // 出題元レベル(チャレンジ時は問題ごとに異なる)。未指定なら現在のレベル
   const srcLv = (q[2] !== undefined) ? q[2] : state.level;
-  state.currentSrcLevel = srcLv;
-  let leadingZero = !!(LEVELS[srcLv] && LEVELS[srcLv].leadingZero);
-  // チャレンジモードでレベル6相当(百の位に商が立たない)の問題は、
-  // タイトル画面で選んだ解法(challengeLeadingZero)に従って切り替える
-  const inChallenge = !!(LEVELS[state.level] && LEVELS[state.level].isChallenge);
-  if (inChallenge && (srcLv === 6 || srcLv === 7)) {
-    leadingZero = state.challengeLeadingZero;
-  }
-  const plan = buildPlan(dividend, divisor, leadingZero);
+  const plan = buildPlan(dividend, divisor);
   state.current = {
-    dividend, divisor, plan,
-    digits: plan.digits, n: plan.n,
-    srcLv,
-    stepIdx: 0, stepConfirmed: false, inputBuffer: [],
-    errorCount: 0, completed: false,
-    hintRequested: false  // 4〜5問目で「ヒントを見せて」と要求されたか
+    dividend, divisor, plan, digits: plan.digits, n: plan.n, srcLv,
+    stepIdx: 0, stepConfirmed: false, inputBuffer: [], multBuffer: [], multExpected: '',
+    errorCount: 0, completed: false, hintRequested: false
   };
   document.getElementById('qNumDisplay').textContent = state.qIdx + 1;
   document.getElementById('qTotalDisplay').textContent = state.questions.length;
-  // ランダムモードでは、毎問「たてる/かける/ひく/おろす」の表示順をシャッフル
+  // ワークスペースをクリア
+  document.getElementById('multWorkspace').innerHTML = '';
   shuffleStepButtons(state.mode === 'random');
-  // 計算ヒントボタンの表示制御
   updateCalcHintButton();
   renderDivision();
   updateStepHint();
   enableNumpad(false);
   clearSpotlight();
-  // アイドルタイマー開始 (4〜5問目で点滅させるため)
+  clearAllMasks();
   resetIdleTimer();
 }
 
-/* 計算ヒントボタン (💡) の状態を更新
-   - ランダムモード: 完全に非表示 (ヒント機能も九九表機能も使わない)
-   - 固定モード: 常時表示、active/attention クラスのみ問題に応じて切り替え */
 function updateCalcHintButton() {
   const btn = document.getElementById('hintBtn');
   if (!btn) return;
-  // 新問題開始時は active/attention 解除
   btn.classList.remove('attention', 'active');
-  // ランダムモードでは非表示
-  if (state.mode === 'random') {
-    btn.style.display = 'none';
-  } else {
-    btn.style.display = '';
-  }
+  btn.style.display = (state.mode === 'random') ? 'none' : '';
 }
 
-/* ---------- アイドル検知 ---------- */
+/* ---------- IDLE ---------- */
 let idleTimer = null;
-const IDLE_MS = 10000; // 10秒
+const IDLE_MS = 12000;
 function resetIdleTimer() {
   if (idleTimer) clearTimeout(idleTimer);
-  // 既にヒント要求済みなら点滅させる必要なし
   if (!state.current || state.current.hintRequested) return;
   const qNum = state.qIdx + 1;
-  // 固定モードかつ4〜5問目のみ点滅対象
   if (state.mode !== 'fixed' || qNum <= 3) return;
-  idleTimer = setTimeout(() => {
-    triggerHintAttention();
-  }, IDLE_MS);
+  idleTimer = setTimeout(() => triggerHintAttention(), IDLE_MS);
 }
-
-function clearIdleTimer() {
-  if (idleTimer) clearTimeout(idleTimer);
-  idleTimer = null;
-}
-
-/* ヒントボタンに「ここを押して」と気づかせる点滅 */
+function clearIdleTimer() { if (idleTimer) clearTimeout(idleTimer); idleTimer = null; }
 function triggerHintAttention() {
   const btn = document.getElementById('hintBtn');
   if (!btn) return;
-  // 既に要求済みなら点滅不要
   if (state.current && state.current.hintRequested) return;
-  // 固定モードかつ4〜5問目のみ点滅対象
   const qNum = state.qIdx + 1;
   if (state.mode !== 'fixed' || qNum <= 3) return;
   btn.classList.add('attention');
 }
 
-/* ---------- STEP BUTTONS SHUFFLE ----------
-   ランダムモードでは毎問ボタンの並び順をシャッフルする
-   (DOMの順番は変えず CSS の order プロパティで表示順だけ変更) */
+/* ---------- STEP BUTTON SHUFFLE ---------- */
 function shuffleStepButtons(shouldShuffle) {
   const grid = document.getElementById('stepGrid');
   if (!grid) return;
   const buttons = grid.querySelectorAll('.step-btn');
-  if (!shouldShuffle) {
-    // 固定モード: 元の並び順 (たてる→かける→ひく→おろす)
-    buttons.forEach(b => { b.style.order = ''; });
-    return;
-  }
-  // Fisher-Yates シャッフルで 0..3 の順序を生成
-  const order = [0, 1, 2, 3];
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-  buttons.forEach((btn, idx) => {
-    btn.style.order = order[idx];
-  });
+  if (!shouldShuffle) { buttons.forEach(b => b.style.order = ''); return; }
+  const order = [0,1,2,3,4];
+  for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
+  buttons.forEach((btn, idx) => btn.style.order = order[idx]);
 }
 
 /* ---------- BUILD QUESTION SET ---------- */
 function buildQuestionSet() {
   const lvl = LEVELS[state.level];
-
-  // ----- チャレンジレベル: レベル1〜6からミックス出題 -----
   if (lvl.isChallenge) {
     buildChallengeSet(lvl);
-    state.qIdx = 0;
-    state.correctCount = 0;
+    state.qIdx = 0; state.correctCount = 0;
     document.getElementById('correctDisplay').textContent = 0;
     document.getElementById('levelDisplay').textContent = lvl.badge || '★';
     return;
   }
-
   if (state.mode === 'fixed') {
-    // [dividend, divisor] に出題元レベル(=自分)を付けて [d, v, srcLv] 形式に統一
-    state.questions = lvl.fixed.slice(0, QUESTIONS_PER_LEVEL)
-      .map(q => [q[0], q[1], state.level]);
+    state.questions = lvl.fixed.slice(0, QUESTIONS_PER_LEVEL).map(q => [q[0], q[1], state.level]);
   } else {
     state.questions = [];
     const seen = new Set();
-    while (state.questions.length < QUESTIONS_PER_LEVEL) {
+    let guard = 0;
+    while (state.questions.length < QUESTIONS_PER_LEVEL && guard < 500) {
+      guard++;
       const q = lvl.randomGen();
       const key = q.join(',');
       if (!seen.has(key)) { seen.add(key); state.questions.push([q[0], q[1], state.level]); }
     }
   }
-  state.qIdx = 0;
-  state.correctCount = 0;
+  state.qIdx = 0; state.correctCount = 0;
   document.getElementById('correctDisplay').textContent = 0;
   document.getElementById('levelDisplay').textContent = lvl.badge || state.level;
 }
 
-/* チャレンジ用: レベル1〜6から各レベルの問題をミックスして出題セットを作る
-   各問題に出題元レベル(srcLv)を付与し、loadQuestionが解法(leadingZero等)を切り替えられるようにする
-   - 固定モード: 各出題元レベルから問題を均等に拾い、シャッフルして QUESTIONS_PER_LEVEL 問に
-   - ランダムモード: 出題元レベルをランダムに選んでそのレベルのrandomGenで生成 */
 function buildChallengeSet(lvl) {
-  const sources = lvl.mixFrom;   // [1..6]
+  const sources = lvl.mixFrom;
   state.questions = [];
   const seen = new Set();
-
   if (state.mode === 'fixed') {
-    // 各レベルの固定問題プールを集めて [d, v, srcLv] のリストにする
     const pool = [];
-    for (const lv of sources) {
-      for (const q of LEVELS[lv].fixed) {
-        pool.push([q[0], q[1], lv]);
-      }
-    }
-    // シャッフル(Fisher-Yates)
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    // できるだけ出題元レベルが重複しすぎないように、先頭から重複なしで拾う
+    for (const lv of sources) for (const q of LEVELS[lv].fixed) pool.push([q[0], q[1], lv]);
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
     for (const item of pool) {
-      const key = item[0] + ',' + item[1] + ',' + item[2];
+      const key = item.join(',');
       if (seen.has(key)) continue;
-      seen.add(key);
-      state.questions.push(item);
+      seen.add(key); state.questions.push(item);
       if (state.questions.length >= QUESTIONS_PER_LEVEL) break;
     }
   } else {
-    // ランダム: 出題元レベルをランダムに選び、そのレベルのrandomGenで生成
     let guard = 0;
     while (state.questions.length < QUESTIONS_PER_LEVEL && guard < 500) {
       guard++;
-      const lv = sources[Math.floor(Math.random() * sources.length)];
+      const lv = sources[Math.floor(Math.random()*sources.length)];
       const q = LEVELS[lv].randomGen();
-      const key = q[0] + ',' + q[1] + ',' + lv;
+      const key = q[0]+','+q[1]+','+lv;
       if (seen.has(key)) continue;
-      seen.add(key);
-      state.questions.push([q[0], q[1], lv]);
+      seen.add(key); state.questions.push([q[0], q[1], lv]);
     }
   }
 }
 
-/* ---------- SCREEN MANAGEMENT ---------- */
+/* ---------- SCREENS ---------- */
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-/* ---------- TITLE SCREEN SETUP ---------- */
 function setupTitleScreen() {
   const grid = document.getElementById('levelGrid');
   grid.innerHTML = '';
-  for (let i = 1; i <= 8; i++) {
+  for (let i = 1; i <= 6; i++) {
     const lvl = LEVELS[i];
     const card = document.createElement('button');
     card.className = 'level-card';
-    if (lvl.variant) card.classList.add('variant');
     if (lvl.isChallenge) card.classList.add('challenge');
     card.dataset.level = i;
-
-    // バッジ(番号 or ★)。派生レベルは番号下に小ラベルを出す
     const badge = lvl.badge || String(i);
     const topLabel = lvl.isChallenge ? 'CHALLENGE' : 'LEVEL';
-    const subBadge = lvl.badgeSub ? `<span class="lv-sub">${lvl.badgeSub}</span>` : '';
-
     card.innerHTML = `
-      <div class="lv-num"><small>${topLabel}</small>${badge}${subBadge}</div>
+      <div class="lv-num"><small>${topLabel}</small>${badge}</div>
       <div class="lv-title">${lvl.title}</div>
-      <div class="lv-desc">${lvl.desc.replace('\n', '<br>')}</div>
-    `;
+      <div class="lv-desc">${lvl.desc.replace('\n','<br>')}</div>`;
     card.onclick = () => {
       document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       state.level = i;
       updateStartBtn();
-      // チャレンジを選んだら、レベル6相当の解法をたずねるモーダルを出す
-      if (lvl.isChallenge) {
-        openMethodModal();
-      }
     };
     grid.appendChild(card);
   }
-
   document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      state.mode = btn.dataset.mode;
+      btn.classList.add('selected'); state.mode = btn.dataset.mode;
     };
   });
-
   document.getElementById('startBtn').onclick = () => {
     if (!state.level) return;
     buildQuestionSet();
     showScreen('mainScreen');
-    // レイアウトを正確に計算するため少し待つ
     requestAnimationFrame(() => loadQuestion());
   };
 }
-
-function updateStartBtn() {
-  document.getElementById('startBtn').disabled = !state.level;
-}
+function updateStartBtn() { document.getElementById('startBtn').disabled = !state.level; }
 
 /* ---------- KUKU TABLE ---------- */
 function buildKukuTable() {
   const tbl = document.getElementById('kukuTable');
   tbl.innerHTML = '';
   const corner = document.createElement('div');
-  corner.className = 'kuku-cell kuku-header';
-  corner.textContent = '×';
+  corner.className = 'kuku-cell kuku-header'; corner.textContent = '×';
   tbl.appendChild(corner);
-  for (let c = 1; c <= 9; c++) {
-    const h = document.createElement('div');
-    h.className = 'kuku-cell kuku-header';
-    h.textContent = c;
-    tbl.appendChild(h);
-  }
+  for (let c = 1; c <= 9; c++) { const h = document.createElement('div'); h.className = 'kuku-cell kuku-header'; h.textContent = c; tbl.appendChild(h); }
   for (let r = 1; r <= 9; r++) {
-    const rh = document.createElement('div');
-    rh.className = 'kuku-cell kuku-row-header';
-    rh.textContent = r;
-    tbl.appendChild(rh);
-    for (let c = 1; c <= 9; c++) {
-      const cell = document.createElement('div');
-      cell.className = 'kuku-cell';
-      cell.textContent = r * c;
-      tbl.appendChild(cell);
-    }
+    const rh = document.createElement('div'); rh.className = 'kuku-cell kuku-row-header'; rh.textContent = r; tbl.appendChild(rh);
+    for (let c = 1; c <= 9; c++) { const cell = document.createElement('div'); cell.className = 'kuku-cell'; cell.textContent = r*c; tbl.appendChild(cell); }
   }
-}
-
-/* ---------- CHALLENGE METHOD MODAL (チャレンジの解法えらび) ---------- */
-function openMethodModal() {
-  const modal = document.getElementById('methodModal');
-  if (modal) modal.classList.add('active');
-}
-function setupMethodModal() {
-  const modal = document.getElementById('methodModal');
-  const yesBtn = document.getElementById('methodYesBtn');
-  const noBtn = document.getElementById('methodNoBtn');
-  if (!modal || !yesBtn || !noBtn) return;
-  yesBtn.onclick = () => {
-    state.challengeLeadingZero = true;   // 百の位に「0」をたてる解法
-    modal.classList.remove('active');
-  };
-  noBtn.onclick = () => {
-    state.challengeLeadingZero = false;  // 百の位をとばす解法
-    modal.classList.remove('active');
-  };
 }
 
 /* ---------- HINT MODAL ---------- */
@@ -2910,41 +2288,14 @@ function setupHintModal() {
   const btn = document.getElementById('hintBtn');
   document.getElementById('hintCloseBtn').onclick = () => modal.classList.remove('active');
   modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
-
-  /* 💡ボタンのタップ/長押し処理
-     - タップ (短く押す): 計算ヒントON (固定モード4〜5問目で有効)
-     - 長押し (500ms以上): 九九表モーダル表示 */
   const LONG_PRESS_MS = 500;
-  let pressTimer = null;
-  let longPressed = false;
-
+  let pressTimer = null, longPressed = false;
   function startPress(e) {
-    e.preventDefault();
-    longPressed = false;
-    btn.classList.add('pressing');
-    pressTimer = setTimeout(() => {
-      // 長押し → 九九表表示
-      longPressed = true;
-      btn.classList.remove('pressing');
-      modal.classList.add('active');
-      // 触覚フィードバック (対応端末のみ)
-      if (navigator.vibrate) navigator.vibrate(30);
-    }, LONG_PRESS_MS);
+    e.preventDefault(); longPressed = false;
+    pressTimer = setTimeout(() => { longPressed = true; modal.classList.add('active'); if (navigator.vibrate) navigator.vibrate(30); }, LONG_PRESS_MS);
   }
-  function endPress(e) {
-    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-    btn.classList.remove('pressing');
-    if (longPressed) return; // 長押し済みならタップ処理しない
-    // タップ処理: 計算ヒントON
-    handleHintButtonTap();
-  }
-  function cancelPress() {
-    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-    btn.classList.remove('pressing');
-    longPressed = true; // タップとして処理されないようにする
-  }
-
-  // タッチ/マウス両対応
+  function endPress() { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } if (longPressed) return; handleHintButtonTap(); }
+  function cancelPress() { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } longPressed = true; }
   btn.addEventListener('touchstart', startPress, { passive: false });
   btn.addEventListener('touchend', endPress);
   btn.addEventListener('touchcancel', cancelPress);
@@ -2952,21 +2303,13 @@ function setupHintModal() {
   btn.addEventListener('mouseup', endPress);
   btn.addEventListener('mouseleave', cancelPress);
 }
-
-/* タップ時の処理: 計算ヒントON */
 function handleHintButtonTap() {
   if (!state.current) return;
   const qNum = state.qIdx + 1;
-  // ランダムモードや1〜3問目では計算ヒントは既に表示中(or 出さない)なので、特に何もしない
-  if (state.mode !== 'fixed' || qNum <= 3) {
-    // 何もせず、軽くフィードバック (フェード)
-    return;
-  }
-  // 4〜5問目: ヒント要求フラグを立てて、ヒント表示
+  if (state.mode !== 'fixed' || qNum <= 3) return;
   state.current.hintRequested = true;
   const btn = document.getElementById('hintBtn');
-  btn.classList.remove('attention');
-  btn.classList.add('active');
+  btn.classList.remove('attention'); btn.classList.add('active');
   clearIdleTimer();
   if (state.current.stepConfirmed) {
     const step = state.current.plan.steps[state.current.stepIdx];
@@ -2974,147 +2317,101 @@ function handleHintButtonTap() {
   }
 }
 
-/* ---------- RESULT SCREEN ---------- */
+/* ---------- RESULT ---------- */
 function showResults() {
   showScreen('resultScreen');
-  const correct = state.correctCount;
-  const total = state.questions.length;
+  const correct = state.correctCount, total = state.questions.length;
   document.getElementById('resultCorrect').textContent = correct;
   document.getElementById('resultTotal').textContent = total;
   const pct = correct / total;
   let emoji, title, msg;
-  if (pct === 1) {
-    emoji = '🏆'; title = 'パーフェクト！'; msg = 'すごい！ぜんもん せいかい だよ！';
-  } else if (pct >= 0.8) {
-    emoji = '🌟'; title = 'よくできました！'; msg = 'もう ちょっとで パーフェクト！';
-  } else if (pct >= 0.5) {
-    emoji = '😊'; title = 'がんばったね！'; msg = 'この ちょうしで れんしゅう しよう！';
-  } else {
-    emoji = '💪'; title = 'もう いっかい!'; msg = 'まちがえても だいじょうぶ！れんしゅう が だいじ！';
-  }
+  if (pct === 1) { emoji='🏆'; title='パーフェクト！'; msg='すごい！ぜんもん せいかい だよ！'; }
+  else if (pct >= 0.8) { emoji='🌟'; title='よくできました！'; msg='もう ちょっとで パーフェクト！'; }
+  else if (pct >= 0.5) { emoji='😊'; title='がんばったね！'; msg='この ちょうしで れんしゅう しよう！'; }
+  else { emoji='💪'; title='もう いっかい!'; msg='まちがえても だいじょうぶ！れんしゅう が だいじ！'; }
   document.getElementById('resultEmoji').textContent = emoji;
   document.getElementById('resultTitle').textContent = title;
   document.getElementById('resultMsg').textContent = msg;
   if (pct >= 0.8) launchConfetti();
 }
-
 function launchConfetti() {
   const container = document.getElementById('confetti');
   container.innerHTML = '';
-  const colors = ['#f08a3e', '#4a90c8', '#5a9f6b', '#f5c842', '#e85a4f', '#8a6fb0'];
+  const colors = ['#f08a3e','#4a90c8','#5a9f6b','#f5c842','#e85a4f','#8a6fb0'];
   for (let i = 0; i < 60; i++) {
     const piece = document.createElement('div');
     piece.className = 'confetti-piece';
-    piece.style.left = Math.random() * 100 + 'vw';
-    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.animationDuration = (2 + Math.random() * 2) + 's';
-    piece.style.animationDelay = Math.random() * 0.8 + 's';
-    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    piece.style.left = Math.random()*100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+    piece.style.animationDuration = (2 + Math.random()*2) + 's';
+    piece.style.animationDelay = Math.random()*0.8 + 's';
+    piece.style.transform = `rotate(${Math.random()*360}deg)`;
     if (Math.random() > 0.5) piece.style.borderRadius = '50%';
     container.appendChild(piece);
   }
   setTimeout(() => container.innerHTML = '', 5000);
 }
 
-/* ---------- WIRE UP MAIN SCREEN ---------- */
+/* ---------- MAIN SCREEN WIRING ---------- */
 function setupMainScreen() {
-  document.querySelectorAll('.step-btn').forEach(btn => {
-    btn.onclick = () => handleStepClick(btn.dataset.step);
-  });
-  document.querySelectorAll('.num-btn').forEach(btn => {
-    btn.onclick = () => handleNumClick(parseInt(btn.dataset.num, 10));
-  });
+  document.querySelectorAll('.step-btn').forEach(btn => { btn.onclick = () => handleStepClick(btn.dataset.step); });
+  document.querySelectorAll('.num-btn').forEach(btn => { btn.onclick = () => handleNumClick(parseInt(btn.dataset.num, 10)); });
   document.getElementById('skipBtn').onclick = () => {
-    if (!state.current) return;
-    // 正解マーク表示中(完了済み)は「つぎへ」ボタンを使うのでスキップ無効
-    if (state.current.completed) return;
-    // スキップした問題は不正解扱い(正解カウントしない)で次の問題へ
-    clearIdleTimer();
-    const maru = document.getElementById('bigMaru');
-    const nextBtn = document.getElementById('nextQBtn');
-    maru.style.display = 'none';
-    nextBtn.classList.remove('show');
-    maru.style.left = ''; maru.style.top = '';
-    maru.style.width = ''; maru.style.height = ''; maru.style.inset = '';
-    nextBtn.style.top = ''; nextBtn.style.bottom = '';
-
+    if (!state.current || state.current.completed) return;
+    clearIdleTimer(); resetMarkAndButtons();
     state.qIdx++;
-    if (state.qIdx >= state.questions.length) {
-      showResults();
-    } else {
-      loadQuestion();
-    }
+    if (state.qIdx >= state.questions.length) showResults();
+    else loadQuestion();
   };
   document.getElementById('backBtn').onclick = () => {
     if (confirm('タイトルへ もどりますか？ いまの もんだいは リセットされます。')) {
-      const maru = document.getElementById('bigMaru');
-      const nextBtn = document.getElementById('nextQBtn');
-      maru.style.display = 'none';
-      nextBtn.classList.remove('show');
-      maru.style.left = ''; maru.style.top = '';
-      maru.style.width = ''; maru.style.height = ''; maru.style.inset = '';
-      nextBtn.style.top = ''; nextBtn.style.bottom = '';
-      clearIdleTimer();
-      showScreen('titleScreen');
+      resetMarkAndButtons(); clearIdleTimer(); showScreen('titleScreen');
     }
   };
 }
-
 function setupResultScreen() {
   document.getElementById('resultHomeBtn').onclick = () => showScreen('titleScreen');
   document.getElementById('resultRetryBtn').onclick = () => {
-    buildQuestionSet();
-    showScreen('mainScreen');
-    requestAnimationFrame(() => loadQuestion());
+    buildQuestionSet(); showScreen('mainScreen'); requestAnimationFrame(() => loadQuestion());
   };
 }
 
-/* ---------- WINDOW RESIZE ----------
-   画面サイズが変わってもひっ算の数字とマス目の整列を保つため、
-   現在の表示内容をスナップショット → 再描画 → 復元 を行う */
+/* ---------- RESIZE ---------- */
 let resizeTimer = null;
 function handleResize() {
   if (!state.current) return;
-  const mainActive = document.getElementById('mainScreen').classList.contains('active');
-  if (!mainActive) return;
+  if (!document.getElementById('mainScreen').classList.contains('active')) return;
   if (state.current.completed) {
-    // 正解表示中は筆算は再描画しないが、マークの位置は画面サイズに合わせて再計算する
-    if (document.getElementById('bigMaru').style.display === 'flex') {
-      positionCorrectMark();
-    }
+    if (document.getElementById('bigMaru').style.display === 'flex') positionCorrectMark();
     return;
   }
-  // スナップショット → 再描画 → 復元
-  const snap = captureDivisionSnapshot();
+  // 簡易再描画(入力途中の完全復元は今回は省略、位置のみ追従)
   renderDivision();
-  applyDivisionSnapshot(snap);
-  // スポットライトとヒントは再計算
-  if (state.current.stepConfirmed) {
-    const step = state.current.plan.steps[state.current.stepIdx];
-    if (step) {
-      spotlightForStep(step);
-      showHintForStep(step);
-    }
+  const step = state.current.plan.steps[state.current.stepIdx];
+  if (step && state.current.stepConfirmed) {
+    spotlightForStep(step); showHintForStep(step);
+    if (step.kind === 'tateru' || step.kind === 'herasu') setupMaskingForTateru(step);
   }
 }
-window.addEventListener('resize', () => {
-  if (resizeTimer) clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(handleResize, 100);
-});
-window.addEventListener('orientationchange', () => {
-  if (resizeTimer) clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(handleResize, 200);
-});
+window.addEventListener('resize', () => { if (resizeTimer) clearTimeout(resizeTimer); resizeTimer = setTimeout(handleResize, 120); });
+window.addEventListener('orientationchange', () => { if (resizeTimer) clearTimeout(resizeTimer); resizeTimer = setTimeout(handleResize, 220); });
+
+/* nextBtnIn keyframe(動的追加) */
+const styleExtra = document.createElement('style');
+styleExtra.textContent = '@keyframes nextBtnIn { from { transform: translateX(-50%) translateY(40px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }';
+document.head.appendChild(styleExtra);
 
 /* ---------- INIT ---------- */
 window.addEventListener('DOMContentLoaded', () => {
+  const tv = document.getElementById('titleVersion'); if (tv) tv.textContent = APP_VERSION;
+  const mv = document.getElementById('mainVersion'); if (mv) mv.textContent = APP_VERSION;
   setupTitleScreen();
   setupMainScreen();
   setupResultScreen();
   buildKukuTable();
   setupHintModal();
-  setupMethodModal();
 });
 </script>
+
 </body>
 </html>
